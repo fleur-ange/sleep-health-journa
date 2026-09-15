@@ -599,7 +599,7 @@
       <canvas id="sleepBarChart"></canvas>
     </div>
     <div class="graph-legend-note" id="sleepGraphNote">
-      横向きの棒グラフで、1日ごとの睡眠時間を表示します。「私」タブで「調子が良い時の平均睡眠時間」を設定すると、その8割を下回った日の棒が赤色で表示されます。期間が長いときは、グラフの中で上下にスクロールできます。
+      横向きの棒グラフで、1日ごとの睡眠時間を表示します。「私」タブで「調子が良い時の平均睡眠時間」を設定すると、その割合に応じて棒の色が変わります（8割以上は緑、6〜8割は黄、6割未満は赤）。期間が長いときは、グラフの中で上下にスクロールできます。
     </div>
   </div>
 
@@ -2411,7 +2411,8 @@
       const today = new Date();
       const labels = [], values = [], colors = [];
       const goodSleep = (currentProfile && currentProfile.goodSleepHours) ? currentProfile.goodSleepHours : null;
-      const threshold = goodSleep ? goodSleep * 0.8 : null;
+      const threshold80 = goodSleep ? goodSleep * 0.8 : null;
+      const threshold60 = goodSleep ? goodSleep * 0.6 : null;
 
       for(let i = days - 1; i >= 0; i--){
         const d = new Date(today);
@@ -2421,12 +2422,14 @@
         const hours = e && e.sleepHours != null ? e.sleepHours : null;
         labels.push(`${d.getMonth()+1}/${d.getDate()}`);
         values.push(hours);
-        if(hours == null){
-          colors.push('#DAE0D8');
-        } else if(threshold != null && hours < threshold){
-          colors.push('#A6482F');
+        if(hours == null || threshold80 == null){
+          colors.push('#DAE0D8'); // 記録なし、または基準値未設定
+        } else if(hours >= threshold80){
+          colors.push('#3E6B4F'); // 緑：8割以上
+        } else if(hours >= threshold60){
+          colors.push('#C9A227'); // 黄：6〜8割
         } else {
-          colors.push('#3B5169');
+          colors.push('#A6482F'); // 赤：6割未満
         }
       }
 
@@ -2434,9 +2437,9 @@
 
       const note = $('sleepGraphNote');
       if(!goodSleep){
-        note.textContent = '「私」タブで「調子が良い時の平均睡眠時間」を設定すると、その8割を下回った日の棒が赤色で表示されます。今は基準値が未設定のため、色分けはしていません。';
+        note.textContent = '「私」タブで「調子が良い時の平均睡眠時間」を設定すると、その時間に対する割合で棒の色が変わります（8割以上は緑、6〜8割は黄、6割未満は赤）。今は基準値が未設定のため、灰色で表示しています。';
       } else {
-        note.textContent = `横向きの棒グラフで、1日ごとの睡眠時間を表示しています。基準値（${goodSleep}時間）の8割にあたる ${fmt(threshold)} 時間を下回った日は赤色で表示しています。期間が長いときは、グラフの中で上下にスクロールできます。`;
+        note.textContent = `横向きの棒グラフで、1日ごとの睡眠時間を表示しています。基準値（${goodSleep}時間）に対して、8割（${fmt(threshold80)}時間）以上は緑、6割（${fmt(threshold60)}時間）〜8割は黄、6割未満は赤で表示しています。期間が長いときは、グラフの中で上下にスクロールできます。`;
       }
     } finally {
       btn.disabled = false;
