@@ -158,6 +158,14 @@
   .meal-slot.collapsed .med-slot-header .chevron{transform:rotate(-90deg);}
   .meal-slot.collapsed .med-slot-body{display:none;}
   .med-slot-hint{font-size:11px; color:var(--ink-soft); margin:-12px 0 12px;}
+
+  .block-head.collapsible{cursor:pointer; user-select:none;}
+  .block-head.collapsible .chevron{margin-left:auto; font-size:11px; color:var(--ink-soft); transition:transform .15s;}
+  section.block.collapsed{padding-bottom:0;}
+  section.block.collapsed .block-head{margin-bottom:0; padding-bottom:0; border-bottom:none;}
+  section.block.collapsed .block-head .chevron{transform:rotate(-90deg);}
+  section.block.collapsed > *:not(.block-head){display:none;}
+
   .cal-row{display:flex; align-items:flex-end; gap:8px; margin-top:2px;}
   .cal-row .field{flex:1;}
   .est-btn{background:var(--ochre-soft); border:1px solid var(--ochre); color:var(--ochre); padding:9px 12px; border-radius:3px; font-size:12.5px; cursor:pointer; white-space:nowrap; height:38px;}
@@ -265,6 +273,7 @@
     <button data-view="work">作業・コミュ</button>
     <button data-view="graph">きざしグラフ</button>
     <button data-view="sleepgraph">睡眠グラフ</button>
+    <button data-view="weight">体重管理</button>
     <button data-view="summary">月次まとめ</button>
     <button data-view="profile">私</button>
   </nav>
@@ -306,8 +315,8 @@
       <div class="cal-note" id="napTotalNote"></div>
     </section>
 
-    <section class="block night">
-      <div class="block-head"><span class="mark">薬</span><h2>服薬</h2></div>
+    <section class="block night" id="secMedications">
+      <div class="block-head collapsible"><span class="mark">薬</span><h2>服薬</h2><span class="chevron">▾</span></div>
       <div class="med-slot-hint">見出しをタップすると、使わない区分を小さく折りたためます（設定は次回以降も記憶されます）。折りたたんだ区分でも、最近よく記録されるようになったら自動的に通常表示に戻ります。</div>
 
       <div class="meal-slot" data-med-slot="morning">
@@ -351,8 +360,8 @@
       </div>
     </section>
 
-    <section class="block day">
-      <div class="block-head"><span class="mark">食</span><h2>食事</h2></div>
+    <section class="block day" id="secMeals">
+      <div class="block-head collapsible"><span class="mark">食</span><h2>食事</h2><span class="chevron">▾</span></div>
 
       <div class="meal-slot" data-slot="breakfast">
         <div class="slot-title"><span class="dot"></span>朝食</div>
@@ -399,9 +408,10 @@
       </div>
     </section>
 
-    <section class="block day">
-      <div class="block-head"><span class="mark">動</span><h2>運動</h2></div>
+    <section class="block day" id="secExercise">
+      <div class="block-head collapsible"><span class="mark">動</span><h2>運動</h2><span class="chevron">▾</span></div>
       <div class="field-row">
+        <div class="field" style="max-width:160px;"><label>体重（kg・任意）</label><input type="number" step="0.1" min="0" id="dailyWeight" placeholder="例）62.5"></div>
         <div class="field" style="max-width:200px;"><label>歩数（任意）</label><input type="number" min="0" id="exSteps" placeholder="例）8000"></div>
       </div>
       <div class="slot-title" style="margin-top:14px;"><span class="dot"></span>その他運動</div>
@@ -415,8 +425,8 @@
       <div class="cal-note" id="exCalNote"></div>
     </section>
 
-    <section class="block day">
-      <div class="block-head"><span class="mark">計</span><h2>カロリー収支</h2></div>
+    <section class="block day" id="secCalSummary">
+      <div class="block-head collapsible"><span class="mark">計</span><h2>カロリー収支</h2><span class="chevron">▾</span></div>
       <div class="cal-summary">
         <div class="row"><span class="lbl">この日の合計摂取カロリー</span><span class="val" id="dayCalTotal">―</span></div>
         <div class="row"><span class="lbl">運動による消費カロリー</span><span class="val" id="dayCalBurn">―</span></div>
@@ -427,8 +437,8 @@
       </div>
     </section>
 
-    <section class="block day">
-      <div class="block-head"><span class="mark">他</span><h2>アルコール</h2></div>
+    <section class="block day" id="secAlcohol">
+      <div class="block-head collapsible"><span class="mark">他</span><h2>アルコール</h2><span class="chevron">▾</span></div>
       <div class="field-row">
         <div class="field"><label>摂取量（杯）</label><input type="number" step="0.5" min="0" id="alcohol" placeholder="例）1"></div>
       </div>
@@ -599,7 +609,30 @@
       <canvas id="sleepBarChart"></canvas>
     </div>
     <div class="graph-legend-note" id="sleepGraphNote">
-      横向きの棒グラフで、1日ごとの睡眠時間を表示します。「私」タブで「調子が良い時の平均睡眠時間」を設定すると、その割合に応じて棒の色が変わります（8割以上は緑、6〜8割は黄、6割未満は赤）。期間が長いときは、グラフの中で上下にスクロールできます。
+      横向きの棒グラフで、1日ごとの睡眠時間を表示します。「私」タブで「調子が良い時の平均睡眠時間」を設定すると、その割合に応じて棒の色が変わります（6割未満は赤、6〜8割は黄、8割以上は緑、150％以上はピンク）。期間が長いときは、グラフの中で上下にスクロールできます。
+    </div>
+  </div>
+
+  <!-- ===================== 体重管理 ===================== -->
+  <div class="view" id="view-weight">
+    <div class="graph-controls">
+      <div class="field">
+        <label>表示期間</label>
+        <select id="weightGraphRange">
+          <option value="14">2週間</option>
+          <option value="30" selected>1か月</option>
+          <option value="90">3か月</option>
+          <option value="180">半年</option>
+          <option value="365">1年</option>
+        </select>
+      </div>
+      <button class="run-btn" id="runWeightGraph" type="button">表示する</button>
+    </div>
+    <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
+    <div class="graph-legend-note" id="weightGraphNote">体重の変化を折れ線グラフで表示します。「生活」タブの運動欄で体重を入力すると記録されます。記録がない日は線がとぎれます。</div>
+    <div class="cal-summary" id="weightSummary" style="display:none;">
+      <div class="row"><span class="lbl">期間内の最新の体重</span><span class="val" id="weightLatest">―</span></div>
+      <div class="row"><span class="lbl">期間の最初からの変化</span><span class="val" id="weightChange">―</span></div>
     </div>
   </div>
 
@@ -1389,6 +1422,7 @@
       meals: meals,
       exMin: $('exMin').value ? Number($('exMin').value) : null,
       exContent: $('exContent').value.trim(),
+      dailyWeight: $('dailyWeight').value ? Number($('dailyWeight').value) : null,
       exSteps: $('exSteps').value ? Number($('exSteps').value) : null,
       exCal: $('exCal').value ? Number($('exCal').value) : null,
       alcohol: $('alcohol').value ? Number($('alcohol').value) : 0,
@@ -1461,6 +1495,7 @@
 
     $('exMin').value = entry.exMin ?? '';
     $('exContent').value = entry.exContent || '';
+    $('dailyWeight').value = entry.dailyWeight ?? '';
     $('exSteps').value = entry.exSteps ?? '';
     $('exCal').value = entry.exCal ?? '';
     $('exCalNote').textContent = '';
@@ -2411,6 +2446,7 @@
       const today = new Date();
       const labels = [], values = [], colors = [];
       const goodSleep = (currentProfile && currentProfile.goodSleepHours) ? currentProfile.goodSleepHours : null;
+      const threshold150 = goodSleep ? goodSleep * 1.5 : null;
       const threshold80 = goodSleep ? goodSleep * 0.8 : null;
       const threshold60 = goodSleep ? goodSleep * 0.6 : null;
 
@@ -2424,6 +2460,8 @@
         values.push(hours);
         if(hours == null || threshold80 == null){
           colors.push('#DAE0D8'); // 記録なし、または基準値未設定
+        } else if(hours >= threshold150){
+          colors.push('#D46FB3'); // ピンク：15割（150%）以上
         } else if(hours >= threshold80){
           colors.push('#3E6B4F'); // 緑：8割以上
         } else if(hours >= threshold60){
@@ -2437,9 +2475,9 @@
 
       const note = $('sleepGraphNote');
       if(!goodSleep){
-        note.textContent = '「私」タブで「調子が良い時の平均睡眠時間」を設定すると、その時間に対する割合で棒の色が変わります（8割以上は緑、6〜8割は黄、6割未満は赤）。今は基準値が未設定のため、灰色で表示しています。';
+        note.textContent = '「私」タブで「調子が良い時の平均睡眠時間」を設定すると、その時間に対する割合で棒の色が変わります（6割未満は赤、6〜8割は黄、8割以上は緑、150％以上はピンク）。今は基準値が未設定のため、灰色で表示しています。';
       } else {
-        note.textContent = `横向きの棒グラフで、1日ごとの睡眠時間を表示しています。基準値（${goodSleep}時間）に対して、8割（${fmt(threshold80)}時間）以上は緑、6割（${fmt(threshold60)}時間）〜8割は黄、6割未満は赤で表示しています。期間が長いときは、グラフの中で上下にスクロールできます。`;
+        note.textContent = `横向きの棒グラフで、1日ごとの睡眠時間を表示しています。基準値（${goodSleep}時間）に対して、6割（${fmt(threshold60)}時間）未満は赤、6〜8割は黄、8割（${fmt(threshold80)}時間）以上は緑、150％（${fmt(threshold150)}時間）以上はピンクで表示しています。期間が長いときは、グラフの中で上下にスクロールできます。`;
       }
     } finally {
       btn.disabled = false;
@@ -2447,9 +2485,119 @@
     }
   });
 
+  // ===================== 体重管理 =====================
+  let weightChart = null;
+
+  function drawWeightChart(labels, values){
+    const ctx = $('weightChart').getContext('2d');
+    if(weightChart) weightChart.destroy();
+    weightChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: '体重（kg）',
+          data: values,
+          borderColor: '#3B5169',
+          backgroundColor: '#3B5169',
+          spanGaps: false,
+          tension: 0.25,
+          pointRadius: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { title: { display: true, text: '体重（kg）' } }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  $('runWeightGraph').addEventListener('click', async ()=>{
+    const btn = $('runWeightGraph');
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '読み込み中…';
+    try{
+      const days = Number($('weightGraphRange').value);
+      const entries = await loadAllEntries();
+      const byDate = {};
+      entries.forEach(e => byDate[e.date] = e);
+
+      const today = new Date();
+      const labels = [], values = [];
+      for(let i = days - 1; i >= 0; i--){
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = isoDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+        const e = byDate[key];
+        labels.push(`${d.getMonth()+1}/${d.getDate()}`);
+        values.push(e && e.dailyWeight != null ? e.dailyWeight : null);
+      }
+
+      drawWeightChart(labels, values);
+
+      const recorded = values.filter(v => v != null);
+      const summaryEl = $('weightSummary');
+      if(recorded.length){
+        const latest = recorded[recorded.length - 1];
+        const first = recorded[0];
+        const diff = Math.round((latest - first) * 10) / 10;
+        $('weightLatest').textContent = `${latest} kg`;
+        $('weightChange').innerHTML = diff === 0
+          ? '変化なし'
+          : `<span class="cal-diff ${diff > 0 ? 'over' : 'under'}">${diff > 0 ? '+' : ''}${diff} kg</span>`;
+        summaryEl.style.display = 'block';
+      } else {
+        summaryEl.style.display = 'none';
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  });
+
+  // ---------- セクション全体の折りたたみ（服薬・食事・運動・カロリー収支・アルコール） ----------
+  let sectionCollapsed = {};
+
+  function applySectionCollapsed(id, collapsed){
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('collapsed', !!collapsed);
+  }
+
+  document.querySelectorAll('.block-head.collapsible').forEach(head=>{
+    head.addEventListener('click', async ()=>{
+      const section = head.closest('section.block');
+      if(!section || !section.id) return;
+      const id = section.id;
+      const collapsed = !sectionCollapsed[id];
+      sectionCollapsed[id] = collapsed;
+      applySectionCollapsed(id, collapsed);
+      try{
+        await storage.set('sectionCollapsed', JSON.stringify(sectionCollapsed), false);
+      }catch(e){ /* 次回起動時にまた保存を試みる */ }
+    });
+  });
+
+  async function loadSectionCollapsed(){
+    try{
+      const res = await storage.get('sectionCollapsed', false);
+      if(res && res.value){
+        sectionCollapsed = JSON.parse(res.value);
+        Object.keys(sectionCollapsed).forEach(id => applySectionCollapsed(id, sectionCollapsed[id]));
+      }
+    }catch(e){
+      sectionCollapsed = {};
+    }
+  }
+
   loadProfile();
   loadItemVisibility();
   loadCustomCategories();
+  loadSectionCollapsed();
   loadMedSlotPrefs().then(()=> loadEntryForDate($('entryDate').value));
 
 })();
