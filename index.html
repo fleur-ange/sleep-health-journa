@@ -1,0 +1,2401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>眠りと暮らしの記録帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #F3F5F1;
+    --paper: #FFFFFF;
+    --ink: #23312B;
+    --ink-soft: #5B6960;
+    --line: #DAE0D8;
+    --dusk: #3B5169;
+    --dusk-soft: #E7ECF1;
+    --ochre: #93783F;
+    --ochre-soft: #F1EADA;
+    --alert: #A6482F;
+    --alert-soft: #F5E4DE;
+    --good: #3E6B4F;
+    --good-soft: #E5EFE7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Shippori Mincho', serif; font-weight:600; margin:0;}
+  .app{max-width:640px; margin:0 auto; padding:28px 18px 80px;}
+
+  header.top{margin-bottom:22px;}
+  header.top .kicker{font-size:12.5px; color:var(--ink-soft); letter-spacing:.02em; margin-bottom:4px;}
+  header.top h1{font-size:26px; color:var(--ink);}
+  header.top .date-line{font-size:13px; color:var(--ink-soft); margin-top:6px;}
+
+  nav.tabs{display:flex; border-bottom:1px solid var(--line); margin-bottom:26px; gap:0;}
+  nav.tabs button{
+    flex:1; background:none; border:none;
+    font-family:'Shippori Mincho', serif; font-size:15px; color:var(--ink-soft);
+    padding:10px 4px 12px; cursor:pointer; border-bottom:2px solid transparent;
+    transition:color .15s, border-color .15s;
+  }
+  nav.tabs button.active{color:var(--ink); border-bottom-color:var(--dusk);}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  section.block{margin-bottom:30px;}
+  .block-head{display:flex; align-items:baseline; gap:10px; margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid var(--line);}
+  .block-head .mark{font-size:11px; color:var(--paper); background:var(--dusk); padding:2px 8px; border-radius:2px; letter-spacing:.03em;}
+  .block.day .block-head .mark{background:var(--ochre);}
+  .block-head h2{font-size:16.5px;}
+
+  .field-row{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px;}
+  .field{flex:1; min-width:130px;}
+  .field label{display:block; font-size:12.5px; color:var(--ink-soft); margin-bottom:4px;}
+  input[type=text], input[type=number], input[type=time], input[type=date], input[type=month], select, textarea{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:3px;
+    background:var(--paper); font-family:inherit; font-size:14.5px; color:var(--ink);
+  }
+  textarea{resize:vertical; min-height:44px;}
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--dusk); outline-offset:1px;}
+
+  .check-row{display:flex; align-items:center; gap:8px; margin:8px 0;}
+  .check-row label{font-size:13.5px; color:var(--ink);}
+
+  .scale{display:flex; gap:6px; margin-top:4px;}
+  .scale button{flex:1; padding:8px 0; border:1px solid var(--line); background:var(--paper); border-radius:3px; font-size:13px; color:var(--ink-soft); cursor:pointer;}
+  .scale button.sel{background:var(--dusk); border-color:var(--dusk); color:#fff;}
+  .scale-caption{display:flex; justify-content:space-between; font-size:11px; color:var(--ink-soft); margin-top:3px;}
+
+  .mood-subhead{display:flex; align-items:center; gap:8px; margin:18px 0 8px;}
+  .mood-subhead .tag{font-size:11px; color:var(--paper); background:var(--dusk); padding:2px 9px; border-radius:10px;}
+  .mood-subhead .tag.night{background:#232946;}
+  .mood-subhead span.h{font-size:13.5px; color:var(--ink-soft);}
+  .mood-grid{display:flex; flex-direction:column; gap:5px;}
+  .mood-row{display:flex; align-items:center; gap:10px;}
+  .mood-row .mood-label{flex:0 0 96px; font-size:12.8px; color:var(--ink);}
+  .mood-row .mood-scale{display:flex; gap:4px; flex:1;}
+  .mood-row .mood-scale button{
+    flex:1; padding:6px 0; border:1px solid var(--line); background:var(--paper);
+    border-radius:3px; font-size:11.5px; color:var(--ink-soft); cursor:pointer;
+  }
+  .mood-row .mood-scale button.sel{background:var(--dusk); border-color:var(--dusk); color:#fff;}
+  .mood-scale.tri-scale{gap:6px;}
+  .mood-scale.tri-scale button{flex:1; font-weight:600;}
+  .mood-scale.tri-scale .tri-green.sel{background:#3E6B4F; border-color:#3E6B4F; color:#fff;}
+  .mood-scale.tri-scale .tri-yellow.sel{background:#C9A227; border-color:#C9A227; color:#fff;}
+  .mood-scale.tri-scale .tri-red.sel{background:#A6482F; border-color:#A6482F; color:#fff;}
+  .mood-hint{font-size:11.5px; color:var(--ink-soft); margin:2px 0 4px;}
+  .mood-row{position:relative; padding-right:52px;}
+  .mood-row .hide-btn{
+    position:absolute; right:0; top:50%; transform:translateY(-50%);
+    background:none; border:none; color:var(--ink-soft); font-size:10.5px;
+    cursor:pointer; padding:4px 2px; white-space:nowrap;
+  }
+  .mood-row .hide-btn:hover{color:var(--alert);}
+  .mood-row.item-hidden{display:none;}
+  .hidden-chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .hidden-chips .chip{
+    font-size:11.5px; color:var(--ink-soft); background:var(--dusk-soft);
+    padding:4px 10px; border-radius:12px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:5px; border:none;
+  }
+  .hidden-chips .chip:hover{background:var(--dusk); color:#fff;}
+  .hidden-chips .chip .plus{font-size:12px;}
+
+  .custom-add-row{display:flex; gap:8px; margin-top:10px;}
+  .custom-add-row input{flex:1;}
+  .custom-add-row .add-btn{width:auto; flex:0 0 auto; padding:9px 14px;}
+
+  .graph-controls{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-bottom:18px;}
+  .graph-controls .field{flex:0 0 auto; min-width:140px;}
+  .chart-wrap{
+    border:1px solid var(--line); border-radius:4px; background:var(--paper);
+    padding:16px 12px 8px; height:300px; margin-bottom:12px;
+  }
+  .graph-legend-note{font-size:11.5px; color:var(--ink-soft); margin-bottom:20px;}
+
+  .repeat-item{border:1px solid var(--line); border-radius:4px; padding:10px 12px; margin-bottom:8px; background:var(--paper); position:relative;}
+  .repeat-item .rm{position:absolute; top:8px; right:8px; background:none; border:none; color:var(--ink-soft); font-size:13px; cursor:pointer;}
+  .add-btn{background:none; border:1px dashed var(--line); color:var(--ink-soft); padding:8px 12px; border-radius:4px; font-size:13px; cursor:pointer; width:100%;}
+  .add-btn:hover{border-color:var(--dusk); color:var(--dusk);}
+
+  /* 食事：朝昼夜間食のスロット */
+  .meal-slot{border:1px solid var(--line); border-radius:4px; padding:12px 14px; margin-bottom:10px; background:var(--paper);}
+  .meal-slot .slot-title{font-size:13.5px; font-weight:700; color:var(--ochre); margin-bottom:8px; display:flex; align-items:center; gap:6px;}
+  .meal-slot .slot-title .dot{width:7px; height:7px; border-radius:50%; background:var(--ochre); display:inline-block;}
+
+  .med-slot-header{cursor:pointer; user-select:none; justify-content:space-between;}
+  .med-slot-header .chevron{margin-left:auto; font-size:11px; color:var(--ink-soft); transition:transform .15s;}
+  .meal-slot.collapsed{padding:9px 14px;}
+  .meal-slot.collapsed .slot-title{margin-bottom:0; color:var(--ink-soft); font-weight:500;}
+  .meal-slot.collapsed .slot-title .dot{background:var(--line);}
+  .meal-slot.collapsed .med-slot-header .chevron{transform:rotate(-90deg);}
+  .meal-slot.collapsed .med-slot-body{display:none;}
+  .med-slot-hint{font-size:11px; color:var(--ink-soft); margin:-12px 0 12px;}
+  .cal-row{display:flex; align-items:flex-end; gap:8px; margin-top:2px;}
+  .cal-row .field{flex:1;}
+  .est-btn{background:var(--ochre-soft); border:1px solid var(--ochre); color:var(--ochre); padding:9px 12px; border-radius:3px; font-size:12.5px; cursor:pointer; white-space:nowrap; height:38px;}
+  .est-btn:hover{background:var(--ochre); color:#fff;}
+  .est-btn:disabled{opacity:.55; cursor:default;}
+  .cal-note{font-size:11px; color:var(--ink-soft); margin-top:4px; min-height:14px;}
+
+  .cal-summary{border:1px solid var(--line); border-radius:4px; padding:14px 16px; margin-top:4px; background:var(--paper);}
+  .cal-summary .row{display:flex; justify-content:space-between; align-items:baseline; font-size:13.5px; margin-bottom:6px;}
+  .cal-summary .row:last-child{margin-bottom:0;}
+  .cal-summary .row .lbl{color:var(--ink-soft);}
+  .cal-summary .row .val{font-family:'Shippori Mincho', serif; font-size:18px; color:var(--ink);}
+  .cal-summary .row .val small{font-size:11.5px; font-family:'Zen Kaku Gothic New', sans-serif; color:var(--ink-soft);}
+  .cal-diff{padding:2px 8px; border-radius:3px; font-size:12px;}
+  .cal-diff.over{background:var(--alert-soft); color:var(--alert);}
+  .cal-diff.under{background:var(--good-soft); color:var(--good);}
+  .cal-summary .no-profile{font-size:12px; color:var(--ink-soft); margin-top:4px;}
+
+  .save-bar{display:flex; align-items:center; gap:12px; margin-top:8px;}
+  .save-btn{background:var(--dusk); color:#fff; border:none; padding:12px 22px; border-radius:4px; font-family:'Shippori Mincho', serif; font-size:15px; cursor:pointer;}
+  .save-btn:hover{background:#2c3f53;}
+  .save-status{font-size:12.5px; color:var(--ink-soft);}
+
+  .month-picker{display:flex; align-items:flex-end; gap:12px; margin-bottom:20px;}
+  .month-picker .field{flex:none; width:170px;}
+  .run-btn{background:var(--ochre); color:#fff; border:none; padding:11px 20px; border-radius:4px; font-family:'Shippori Mincho', serif; font-size:14.5px; cursor:pointer; height:40px;}
+  .run-btn:hover{background:#7a6535;}
+
+  .summary-empty{color:var(--ink-soft); font-size:13.5px; padding:18px; border:1px dashed var(--line); border-radius:4px; text-align:center;}
+
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:4px; overflow:hidden; margin-bottom:20px;}
+  .stat{background:var(--paper); padding:14px 14px;}
+  .stat .label{font-size:12px; color:var(--ink-soft); margin-bottom:4px;}
+  .stat .value{font-size:20px; font-family:'Shippori Mincho', serif; color:var(--ink);}
+  .stat .value small{font-size:12px; font-family:'Zen Kaku Gothic New', sans-serif; color:var(--ink-soft); margin-left:2px;}
+
+  .notes-block{border:1px solid var(--alert-soft); background:var(--alert-soft); border-radius:4px; padding:14px 16px; margin-bottom:18px;}
+  .notes-block h3{font-size:14.5px; color:var(--alert); margin-bottom:8px;}
+  .notes-block ul{margin:0; padding-left:18px; font-size:13.5px; color:var(--ink);}
+  .notes-block li{margin-bottom:5px;}
+  .notes-block.ok{border-color:var(--dusk-soft); background:var(--dusk-soft);}
+  .notes-block.ok h3{color:var(--dusk);}
+
+  table.day-table{width:100%; border-collapse:collapse; font-size:12px; margin-top:6px;}
+  table.day-table th, table.day-table td{border-bottom:1px solid var(--line); padding:6px 5px; text-align:left; color:var(--ink); white-space:nowrap;}
+  table.day-table th{color:var(--ink-soft); font-weight:500; font-size:11px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:4px; padding:2px 10px;}
+
+  .rec-count{font-size:12px; color:var(--ink-soft); margin:-10px 0 16px;}
+
+  .calendar-wrap{border:1px solid var(--line); border-radius:4px; padding:12px 14px; margin:8px 0 16px; background:var(--paper);}
+  .calendar-nav{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .calendar-nav button{background:none; border:1px solid var(--line); border-radius:3px; padding:4px 12px; cursor:pointer; color:var(--ink-soft); font-size:13px;}
+  .calendar-nav button:hover{border-color:var(--dusk); color:var(--dusk);}
+  .calendar-nav .cal-title{font-family:'Shippori Mincho', serif; font-size:15px; color:var(--ink);}
+  .calendar-grid{display:grid; grid-template-columns:repeat(7, 1fr); gap:3px; text-align:center;}
+  .calendar-grid .cal-dow{font-size:11px; color:var(--ink-soft); padding:4px 0;}
+  .calendar-grid .cal-day{position:relative; padding:8px 0 10px; border-radius:4px; cursor:pointer; font-size:13px; color:var(--ink); background:var(--bg);}
+  .calendar-grid .cal-day:hover{background:var(--dusk-soft);}
+  .calendar-grid .cal-day.empty{cursor:default; background:none;}
+  .calendar-grid .cal-day.has-entry::after{content:''; position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background:var(--ochre);}
+  .calendar-grid .cal-day.today{box-shadow:inset 0 0 0 1px var(--dusk);}
+  .calendar-grid .cal-day.selected{background:var(--dusk); color:#fff;}
+  .calendar-grid .cal-day.selected.has-entry::after{background:#fff;}
+
+  .profile-note{font-size:12.5px; color:var(--ink-soft); background:var(--dusk-soft); border-radius:4px; padding:12px 14px; margin-top:6px; line-height:1.7;}
+  .profile-result{border:1px solid var(--line); border-radius:4px; padding:16px; margin-top:16px; background:var(--paper);}
+  .profile-result .big{font-family:'Shippori Mincho', serif; font-size:26px; color:var(--dusk);}
+  .profile-result .big small{font-size:13px; color:var(--ink-soft); font-family:'Zen Kaku Gothic New', sans-serif;}
+  .profile-result .formula{font-size:11.5px; color:var(--ink-soft); margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="kicker">DAILY WELLNESS LOG</div>
+    <h1>眠りと暮らしの記録帳</h1>
+    <div class="date-line" id="todayLine"></div>
+  </header>
+
+  <div class="field-row">
+    <div class="field" style="max-width:200px;">
+      <label>記録する日付</label>
+      <input type="date" id="entryDate">
+    </div>
+    <div class="field" style="max-width:180px; align-self:flex-end;">
+      <button type="button" class="add-btn" id="toggleCalendarBtn">カレンダーで見る</button>
+    </div>
+  </div>
+  <div class="calendar-wrap" id="calendarWrap" style="display:none;">
+    <div class="calendar-nav">
+      <button type="button" id="calPrevBtn">＜</button>
+      <span class="cal-title" id="calTitle"></span>
+      <button type="button" id="calNextBtn">＞</button>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <div class="mood-hint" style="margin-top:8px; margin-bottom:0;">●印がついている日は記録があります。日付をタップするとその日に切り替わります。</div>
+  </div>
+  <div class="rec-count" id="loadStatus"></div>
+
+  <nav class="tabs">
+    <button class="active" data-view="entry">生活</button>
+    <button data-view="mind">日々のきざし</button>
+    <button data-view="work">作業・コミュ</button>
+    <button data-view="graph">きざしグラフ</button>
+    <button data-view="sleepgraph">睡眠グラフ</button>
+    <button data-view="summary">月次まとめ</button>
+    <button data-view="profile">私</button>
+  </nav>
+
+  <!-- ===================== 今日の記録 ===================== -->
+  <div class="view active" id="view-entry">
+
+    <section class="block night">
+      <div class="block-head"><span class="mark">夜</span><h2>睡眠</h2></div>
+      <div class="field-row">
+        <div class="field"><label>就寝時刻</label><input type="time" id="bedTime"></div>
+        <div class="field"><label>起床時刻</label><input type="time" id="wakeTime"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>中途覚醒の回数</label><input type="number" min="0" id="wakeCount" placeholder="例）1"></div>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="poorOnset">
+        <label for="poorOnset">寝つきが悪かった</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="hardToReturnSleep">
+        <label for="hardToReturnSleep">途中で起きてからなかなか眠れなかった</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="earlyWake">
+        <label for="earlyWake">予定より早く目が覚めた（早朝覚醒）</label>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>実際に眠れた時間（時間）― 未入力なら就寝・起床時刻から自動計算</label>
+          <input type="number" step="0.1" min="0" id="sleepHours" placeholder="例）6.5">
+        </div>
+      </div>
+
+      <div class="slot-title" style="margin-top:16px;"><span class="dot"></span>昼寝</div>
+      <div id="napList"></div>
+      <button class="add-btn" id="addNap" type="button">＋ 昼寝を追加</button>
+      <div class="cal-note" id="napTotalNote"></div>
+    </section>
+
+    <section class="block night">
+      <div class="block-head"><span class="mark">薬</span><h2>服薬</h2></div>
+      <div class="med-slot-hint">見出しをタップすると、使わない区分を小さく折りたためます（設定は次回以降も記憶されます）。折りたたんだ区分でも、最近よく記録されるようになったら自動的に通常表示に戻ります。</div>
+
+      <div class="meal-slot" data-med-slot="morning">
+        <div class="slot-title med-slot-header"><span class="dot"></span>朝<span class="chevron">▾</span></div>
+        <div class="med-slot-body">
+          <div id="med-morningList"></div>
+          <button class="add-btn" data-add-med="morning" type="button">＋ 朝の薬を追加</button>
+        </div>
+      </div>
+
+      <div class="meal-slot" data-med-slot="noon">
+        <div class="slot-title med-slot-header"><span class="dot"></span>昼<span class="chevron">▾</span></div>
+        <div class="med-slot-body">
+          <div id="med-noonList"></div>
+          <button class="add-btn" data-add-med="noon" type="button">＋ 昼の薬を追加</button>
+        </div>
+      </div>
+
+      <div class="meal-slot" data-med-slot="evening">
+        <div class="slot-title med-slot-header"><span class="dot"></span>夜<span class="chevron">▾</span></div>
+        <div class="med-slot-body">
+          <div id="med-eveningList"></div>
+          <button class="add-btn" data-add-med="evening" type="button">＋ 夜の薬を追加</button>
+        </div>
+      </div>
+
+      <div class="meal-slot" data-med-slot="beforeBed">
+        <div class="slot-title med-slot-header"><span class="dot"></span>寝る前<span class="chevron">▾</span></div>
+        <div class="med-slot-body">
+          <div id="med-beforeBedList"></div>
+          <button class="add-btn" data-add-med="beforeBed" type="button">＋ 寝る前の薬を追加</button>
+        </div>
+      </div>
+
+      <div class="meal-slot" data-med-slot="prn">
+        <div class="slot-title med-slot-header"><span class="dot"></span>頓服（症状があるときのみ）<span class="chevron">▾</span></div>
+        <div class="med-slot-body">
+          <div id="med-prnList"></div>
+          <button class="add-btn" data-add-med="prn" type="button">＋ 頓服の記録を追加</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="block day">
+      <div class="block-head"><span class="mark">食</span><h2>食事</h2></div>
+
+      <div class="meal-slot" data-slot="breakfast">
+        <div class="slot-title"><span class="dot"></span>朝食</div>
+        <div class="field-row">
+          <div class="field" style="max-width:130px;"><label>時刻</label><input type="time" class="slot-time"></div>
+          <div class="field" style="flex:2;"><label>食べたもの</label><textarea class="slot-content" placeholder="例）ご飯、味噌汁、焼き鮭、納豆"></textarea></div>
+        </div>
+        <div class="cal-row">
+          <div class="field"><label>カロリー（kcal・わかれば入力）</label><input type="number" min="0" class="slot-cal"></div>
+        </div>
+      </div>
+
+      <div class="meal-slot" data-slot="lunch">
+        <div class="slot-title"><span class="dot"></span>昼食</div>
+        <div class="field-row">
+          <div class="field" style="max-width:130px;"><label>時刻</label><input type="time" class="slot-time"></div>
+          <div class="field" style="flex:2;"><label>食べたもの</label><textarea class="slot-content" placeholder="例）チャーハン、卵スープ"></textarea></div>
+        </div>
+        <div class="cal-row">
+          <div class="field"><label>カロリー（kcal・わかれば入力）</label><input type="number" min="0" class="slot-cal"></div>
+        </div>
+      </div>
+
+      <div class="meal-slot" data-slot="dinner">
+        <div class="slot-title"><span class="dot"></span>夕食</div>
+        <div class="field-row">
+          <div class="field" style="max-width:130px;"><label>時刻</label><input type="time" class="slot-time"></div>
+          <div class="field" style="flex:2;"><label>食べたもの</label><textarea class="slot-content" placeholder="例）豚の生姜焼き、キャベツの千切り、ご飯"></textarea></div>
+        </div>
+        <div class="cal-row">
+          <div class="field"><label>カロリー（kcal・わかれば入力）</label><input type="number" min="0" class="slot-cal"></div>
+        </div>
+      </div>
+
+      <div class="meal-slot" data-slot="snack">
+        <div class="slot-title"><span class="dot"></span>間食</div>
+        <div class="field-row">
+          <div class="field" style="max-width:130px;"><label>時刻</label><input type="time" class="slot-time"></div>
+          <div class="field" style="flex:2;"><label>食べたもの</label><textarea class="slot-content" placeholder="例）クッキー2枚、カフェオレ"></textarea></div>
+        </div>
+        <div class="cal-row">
+          <div class="field"><label>カロリー（kcal・わかれば入力）</label><input type="number" min="0" class="slot-cal"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block day">
+      <div class="block-head"><span class="mark">動</span><h2>運動</h2></div>
+      <div class="field-row">
+        <div class="field" style="max-width:200px;"><label>歩数（任意）</label><input type="number" min="0" id="exSteps" placeholder="例）8000"></div>
+      </div>
+      <div class="slot-title" style="margin-top:14px;"><span class="dot"></span>その他運動</div>
+      <div class="field-row">
+        <div class="field"><label>内容</label><input type="text" id="exContent" placeholder="例）ウォーキング"></div>
+        <div class="field" style="max-width:150px;"><label>時間（分）</label><input type="number" min="0" id="exMin" placeholder="例）30"></div>
+      </div>
+      <div class="cal-row">
+        <div class="field"><label>消費カロリー（kcal・歩数から自動計算、手入力でも修正可）</label><input type="number" min="0" id="exCal"></div>
+      </div>
+      <div class="cal-note" id="exCalNote"></div>
+    </section>
+
+    <section class="block day">
+      <div class="block-head"><span class="mark">計</span><h2>カロリー収支</h2></div>
+      <div class="cal-summary">
+        <div class="row"><span class="lbl">この日の合計摂取カロリー</span><span class="val" id="dayCalTotal">―</span></div>
+        <div class="row"><span class="lbl">運動による消費カロリー</span><span class="val" id="dayCalBurn">―</span></div>
+        <div class="row"><span class="lbl">正味摂取カロリー（摂取－消費）</span><span class="val" id="dayCalNet">―</span></div>
+        <div class="row"><span class="lbl">1日の目安摂取カロリー</span><span class="val" id="dayCalTarget">―</span></div>
+        <div class="row"><span class="lbl">目安との差</span><span class="val" id="dayCalDiff">―</span></div>
+        <div class="no-profile" id="noProfileNote" style="display:none;">私タブで身長・体重などを入力すると、目安摂取カロリーと比較できます。</div>
+      </div>
+    </section>
+
+    <section class="block day">
+      <div class="block-head"><span class="mark">他</span><h2>アルコール</h2></div>
+      <div class="field-row">
+        <div class="field"><label>摂取量（杯）</label><input type="number" step="0.5" min="0" id="alcohol" placeholder="例）1"></div>
+      </div>
+    </section>
+
+    <div class="save-bar">
+      <button class="save-btn" id="saveBtn">この日の記録を保存</button>
+      <span class="save-status" id="saveStatus"></span>
+    </div>
+  </div>
+
+  <!-- ===================== 気分・行動 ===================== -->
+  <div class="view" id="view-mind">
+
+    <section class="block day">
+      <div class="block-head"><span class="mark">心</span><h2>気分</h2></div>
+      <div class="mood-hint">感じたものだけ、強さを1〜5で選んでください（1＝わずかに／5＝強く）。各項目の右端の「非表示」で、使わない項目を隠せます（設定は次回以降も記憶されます）。</div>
+
+      <div class="mood-subhead"><span class="tag">朝</span><span class="h">起きたときの気分</span></div>
+      <div class="mood-grid" id="moodMorning"></div>
+
+      <div class="mood-subhead"><span class="tag night">夜</span><span class="h">寝る前の気分</span></div>
+      <div class="mood-grid" id="moodNight"></div>
+
+      <div class="hidden-chips" id="moodHiddenChips"></div>
+      <div class="custom-add-row">
+        <input type="text" id="moodCustomInput" placeholder="自分だけの項目を追加（例：焦燥感）">
+        <button type="button" class="add-btn" id="moodCustomAddBtn">＋ 追加</button>
+      </div>
+    </section>
+
+    <section class="block day">
+      <div class="block-head"><span class="mark">体</span><h2>身体</h2></div>
+      <div class="mood-hint">身体的疲労や、気になる身体症状を朝・夜で記録できます。各項目の右端の「非表示」で、使わない項目を隠せます。</div>
+
+      <div class="mood-subhead"><span class="tag">朝</span><span class="h">起きたときの身体の状態</span></div>
+      <div class="mood-grid" id="bodyMorning"></div>
+
+      <div class="mood-subhead"><span class="tag night">夜</span><span class="h">寝る前の身体の状態</span></div>
+      <div class="mood-grid" id="bodyNight"></div>
+
+      <div class="hidden-chips" id="bodyHiddenChips"></div>
+      <div class="custom-add-row">
+        <input type="text" id="bodyCustomInput" placeholder="自分だけの項目を追加（例：肌荒れ）">
+        <button type="button" class="add-btn" id="bodyCustomAddBtn">＋ 追加</button>
+      </div>
+    </section>
+
+    <section class="block day">
+      <div class="block-head"><span class="mark">動</span><h2>行動</h2></div>
+      <div class="mood-hint">その日にあてはまった行動だけ、強さ・頻度を1〜5で選んでください。各項目の右端の「非表示」で、使わない項目を隠せます。</div>
+      <div class="mood-grid" id="behaviorList"></div>
+      <div class="hidden-chips" id="behaviorHiddenChips"></div>
+      <div class="custom-add-row">
+        <input type="text" id="behaviorCustomInput" placeholder="自分だけの項目を追加（例：物を捨てられない）">
+        <button type="button" class="add-btn" id="behaviorCustomAddBtn">＋ 追加</button>
+      </div>
+      <div class="profile-note" style="margin-top:12px;">
+        この項目は診断のためのものではなく、日々の振り返りや通院時に状況を伝えるための個人記録です。気になる変化が続く場合は、医療専門家にご相談ください。
+      </div>
+    </section>
+
+    <section class="block day">
+      <div class="block-head"><span class="mark">他</span><h2>メモ</h2></div>
+      <div class="field-row">
+        <div class="field"><label>メモ（任意）</label><textarea id="memo" placeholder="気になったことなど"></textarea></div>
+      </div>
+    </section>
+
+    <div class="save-bar">
+      <button class="save-btn" id="saveBtn2">この日の記録を保存</button>
+      <span class="save-status" id="saveStatus2"></span>
+    </div>
+  </div>
+
+  <!-- ===================== 作業・コミュニケーション ===================== -->
+  <div class="view" id="view-work">
+
+    <section class="block day">
+      <div class="block-head"><span class="mark">作</span><h2>作業</h2></div>
+      <div class="mood-hint">当てはまる傾向を、低（問題なし）・中（注意）・高（要注意）の3段階で選んでください。押した枠の色でも状態が一目でわかります。当てはまらない項目は空欄のままでOKです。各項目の右端の「非表示」で、使わない項目を隠せます。</div>
+      <div class="mood-grid" id="workList"></div>
+      <div class="hidden-chips" id="workHiddenChips"></div>
+      <div class="custom-add-row">
+        <input type="text" id="workCustomInput" placeholder="自分だけの項目を追加（例：締め切り直前に集中する）">
+        <button type="button" class="add-btn" id="workCustomAddBtn">＋ 追加</button>
+      </div>
+    </section>
+
+    <section class="block day">
+      <div class="block-head"><span class="mark">話</span><h2>コミュニケーション</h2></div>
+      <div class="mood-hint">当てはまる傾向を、低（問題なし）・中（注意）・高（要注意）の3段階で選んでください。押した枠の色でも状態が一目でわかります。当てはまらない項目は空欄のままでOKです。</div>
+      <div class="mood-grid" id="commList"></div>
+      <div class="hidden-chips" id="commHiddenChips"></div>
+      <div class="custom-add-row">
+        <input type="text" id="commCustomInput" placeholder="自分だけの項目を追加（例：断れない）">
+        <button type="button" class="add-btn" id="commCustomAddBtn">＋ 追加</button>
+      </div>
+      <div class="profile-note" style="margin-top:16px;">
+        調子が悪くなる前のサインには個人差があります。この記録は自分の「症状曲線」の今の位置を把握し、早めに休む・相談するなどの対処につなげるための個人用の目安です。診断ではありません。「高」が続くようなら、早めに信頼できる人や専門家に相談することをおすすめします。
+      </div>
+    </section>
+
+    <div class="save-bar">
+      <button class="save-btn" id="saveBtn3">この日の記録を保存</button>
+      <span class="save-status" id="saveStatus3"></span>
+    </div>
+  </div>
+
+  <!-- ===================== グラフ ===================== -->
+  <div class="view" id="view-graph">
+    <div class="graph-controls">
+      <div class="field">
+        <label>見る項目</label>
+        <select id="graphMetric">
+          <option value="physicalFatigue">身体的疲労</option>
+          <option value="moodAvg">気分（記録した項目の平均）</option>
+          <option value="correlation">疲れと気分をすべて重ねて表示（相関を振り返る）</option>
+        </select>
+      </div>
+      <div class="field" id="graphTimeOfDayField" style="display:none;">
+        <label>時間帯</label>
+        <select id="graphTimeOfDay">
+          <option value="morning">朝</option>
+          <option value="night">夜</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>期間</label>
+        <select id="graphRange">
+          <option value="daily30">直近30日</option>
+          <option value="month">月を選んで表示</option>
+          <option value="year">年を選んで表示（月ごとの平均）</option>
+        </select>
+      </div>
+      <div class="field" id="graphMonthField" style="display:none;">
+        <label>月を選択</label>
+        <input type="month" id="graphMonthPicker">
+      </div>
+      <div class="field" id="graphYearField" style="display:none;">
+        <label>年を選択</label>
+        <input type="number" id="graphYearPicker" min="2000" max="2100" step="1">
+      </div>
+      <button class="run-btn" id="runGraph" type="button">表示する</button>
+    </div>
+
+    <div class="chart-wrap"><canvas id="moodBodyChart"></canvas></div>
+    <div class="graph-legend-note" id="graphLegendNote">朝（明るい色）と夜（濃い色）の2本の線で、1〜5の強さを比較できます。記録がない日は線がとぎれます。「気分」は、その朝／夜に記録した項目の値をすべて平均したものです。</div>
+  </div>
+
+  <!-- ===================== 睡眠グラフ ===================== -->
+  <div class="view" id="view-sleepgraph">
+    <div class="graph-controls">
+      <div class="field">
+        <label>表示期間</label>
+        <select id="sleepGraphRange">
+          <option value="1">1日</option>
+          <option value="14">2週間</option>
+          <option value="30" selected>1か月</option>
+          <option value="90">3か月</option>
+          <option value="365">1年</option>
+        </select>
+      </div>
+      <button class="run-btn" id="runSleepGraph" type="button">表示する</button>
+    </div>
+    <div class="chart-wrap" id="sleepChartWrap" style="height:400px; overflow-y:auto; overflow-x:hidden;">
+      <canvas id="sleepBarChart"></canvas>
+    </div>
+    <div class="graph-legend-note" id="sleepGraphNote">
+      横向きの棒グラフで、1日ごとの睡眠時間を表示します。「私」タブで「調子が良い時の平均睡眠時間」を設定すると、その8割を下回った日の棒が赤色で表示されます。期間が長いときは、グラフの中で上下にスクロールできます。
+    </div>
+  </div>
+
+  <!-- ===================== 月次まとめ ===================== -->
+  <div class="view" id="view-summary">
+    <div class="month-picker">
+      <div class="field"><label>集計する月</label><input type="month" id="monthPicker"></div>
+      <button class="run-btn" id="runSummary" type="button">この月を集計する</button>
+    </div>
+    <div id="summaryArea">
+      <div class="summary-empty">月を選んで「この月を集計する」を押してください。</div>
+    </div>
+  </div>
+
+  <!-- ===================== プロフィール ===================== -->
+  <div class="view" id="view-profile">
+    <section class="block">
+      <div class="block-head"><span class="mark" style="background:var(--dusk);">目安</span><h2>1日の目安摂取カロリーを計算</h2></div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>性別</label>
+          <select id="pfSex">
+            <option value="male">男性</option>
+            <option value="female">女性</option>
+          </select>
+        </div>
+        <div class="field"><label>年齢</label><input type="number" min="0" id="pfAge" placeholder="例）45"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>身長（cm）</label><input type="number" step="0.1" min="0" id="pfHeight" placeholder="例）165"></div>
+        <div class="field"><label>体重（kg）</label><input type="number" step="0.1" min="0" id="pfWeight" placeholder="例）60"></div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>ふだんの活動量</label>
+          <select id="pfActivity">
+            <option value="1.2">ほとんど座って過ごす</option>
+            <option value="1.375">軽い運動を週1〜3回</option>
+            <option value="1.55">適度な運動を週3〜5回</option>
+            <option value="1.725">激しい運動を週6〜7回</option>
+            <option value="1.9">非常に激しい運動・肉体労働</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>既往症・持病（任意、例：糖尿病、高血圧）</label><input type="text" id="pfConditions" placeholder="例）2型糖尿病"></div>
+      </div>
+
+      <div class="save-bar">
+        <button class="save-btn" id="pfSaveBtn">保存して計算する</button>
+        <span class="save-status" id="pfStatus"></span>
+      </div>
+
+      <div id="pfResult"></div>
+
+      <div class="profile-note">
+        ここで出る数値は、身長・体重・年齢・活動量から一般的な計算式（Mifflin-St Jeorの式）で出したおおまかな目安です。持病（糖尿病など）がある場合、実際に適した摂取カロリーは治療内容や検査値によって個人差が大きいため、正確な目標値は主治医または管理栄養士にご確認ください。この記録帳の数値はあくまで日々の振り返りの参考としてお使いください。
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><span class="mark">睡眠</span><h2>睡眠の基準値</h2></div>
+      <div class="mood-hint">調子が良いときに、だいたいどれくらい眠れているかを設定しておくと、「睡眠グラフ」タブでその日の睡眠時間が基準より大きく下回っていないかを色分けして確認できます。</div>
+      <div class="field-row">
+        <div class="field" style="max-width:220px;">
+          <label>調子が良い時の平均睡眠時間（時間）</label>
+          <input type="number" step="0.1" min="0" id="pfGoodSleepHours" placeholder="例）7">
+        </div>
+      </div>
+      <div class="save-bar">
+        <button class="save-btn" id="pfSleepSaveBtn">保存する</button>
+        <span class="save-status" id="pfSleepStatus"></span>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><span class="mark" style="background:var(--ochre);">保存</span><h2>データのバックアップ</h2></div>
+      <div class="mood-hint">
+        この記録は、この端末のこのブラウザの中だけに保存されています（外部のサーバーには送信されません）。機種変更するときや、記録をなくさないようにしたいときは、下のボタンでファイルに書き出して保管しておいてください。
+      </div>
+      <div class="save-bar" style="margin-top:10px;">
+        <button class="save-btn" id="exportBtn" type="button">全データを書き出す（ダウンロード）</button>
+      </div>
+      <div class="save-bar" style="margin-top:12px;">
+        <label class="add-btn" for="importFile" style="display:inline-block; width:auto; text-align:center; cursor:pointer;">ファイルから読み込む</label>
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+      </div>
+      <div class="save-status" id="dataIoStatus" style="margin-top:8px;"></div>
+      <div class="profile-note" style="margin-top:14px;">
+        読み込みを行うと、これまでこの端末に保存されていた記録は、書き出したファイルの内容で上書きされます。誤って別の人のファイルを読み込まないようご注意ください。
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- 保存の仕組み（この端末のブラウザ内だけに保存。サーバーへは送信しません） ----------
+  const LS_PREFIX = 'sleepJournal:v1:';
+  const storage = {
+    async get(key){
+      const raw = localStorage.getItem(LS_PREFIX + key);
+      if(raw === null){ throw new Error('not found'); }
+      return { key, value: raw };
+    },
+    async set(key, value){
+      try{
+        localStorage.setItem(LS_PREFIX + key, value);
+        return { key, value };
+      }catch(e){
+        return null; // 保存容量オーバーなど
+      }
+    },
+    async delete(key){
+      try{
+        localStorage.removeItem(LS_PREFIX + key);
+        return { key, deleted: true };
+      }catch(e){ return null; }
+    },
+    async list(prefix){
+      const keys = [];
+      const p = LS_PREFIX + (prefix || '');
+      for(let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if(k && k.startsWith(p)) keys.push(k.slice(LS_PREFIX.length));
+      }
+      return { keys };
+    }
+  };
+
+  const pad = (n) => String(n).padStart(2,'0');
+  const todayISO = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  };
+  const MEAL_SLOTS = ['breakfast','lunch','dinner','snack'];
+  const MEAL_LABEL = {breakfast:'朝食', lunch:'昼食', dinner:'夕食', snack:'間食'};
+
+  const MOOD_CATEGORIES = [
+    {id:'irritation',   label:'イライラ'},
+    {id:'anxiety',      label:'不安'},
+    {id:'depression',   label:'憂鬱'},
+    {id:'impatience',   label:'焦り'},
+    {id:'guilt',        label:'罪悪感'},
+    {id:'distraction',  label:'注意散漫'},
+    {id:'mentalFatigue',label:'精神的疲労'},
+    {id:'restlessness', label:'ソワソワ'},
+    {id:'murkiness',    label:'モヤモヤ'},
+    {id:'omnipotence',  label:'万能感'},
+    {id:'excitement',   label:'ワクワク'},
+    {id:'hyperfocus',   label:'集中過多'},
+    {id:'sadness',      label:'悲しみ'},
+    {id:'anger',        label:'怒り'},
+    {id:'tension',       label:'緊張'}
+  ];
+
+  const BODY_CATEGORIES = [
+    {id:'physicalFatigue', label:'身体的疲労'},
+    {id:'headache',        label:'頭痛'},
+    {id:'stomachache',     label:'腹痛'},
+    {id:'backpain',        label:'腰痛'},
+    {id:'itching',         label:'かゆみ'},
+    {id:'forgetfulness',   label:'物忘れ'},
+    {id:'spacing',         label:'ぼーっとする'},
+    {id:'dizziness',       label:'めまい'},
+    {id:'palpitations',    label:'動悸'},
+    {id:'stiffness',       label:'肩こり'},
+    {id:'nausea',          label:'吐き気'}
+  ];
+
+  const BEHAVIOR_CATEGORIES = [
+    {id:'withdrawal',   label:'ひきこもった（外出や活動を避けた）'},
+    {id:'tearfulness',  label:'涙が出た'},
+    {id:'avoidContact', label:'人との連絡を避けた'},
+    {id:'effortful',    label:'身の回りのことが億劫だった'},
+    {id:'checking',     label:'確認行動を繰り返した'},
+    {id:'avoidance',    label:'予定や外出を避けた'},
+    {id:'impulseBuy',   label:'衝動買いをした'},
+    {id:'talkative',    label:'普段より多弁・早口だった'},
+    {id:'risky',        label:'危険・無謀な行動をした'},
+    {id:'hyperactive',  label:'普段より活動的・活発だった'},
+    {id:'racingIdeas',  label:'新しい考えや計画が次々浮かんだ'}
+  ];
+
+  const WORK_CATEGORIES = [
+    {id:'overfocus',       label:'集中のし過ぎ'},
+    {id:'distraction',     label:'注意散漫'},
+    {id:'mistakes',        label:'ミスが増える'},
+    {id:'timeManagement',  label:'時間管理ができない'},
+    {id:'planning',        label:'計画性の欠如'},
+    {id:'bigPicture',      label:'全体像を見失う'},
+    {id:'prioritization',  label:'優先順位がつけられない'},
+    {id:'decisionMaking',  label:'取捨選択に迷う'},
+    {id:'perfectionism',   label:'完璧主義'},
+    {id:'procrastination', label:'先延ばし'},
+    {id:'avoidance',       label:'回避（着手を避ける）'},
+    {id:'taskSwitching',   label:'切り替えが苦手（タスクや気持ちの切り替え）'}
+  ];
+
+  const COMM_CATEGORIES = [
+    {id:'bottling',          label:'一人で抱え込む'},
+    {id:'hardToConsult',     label:'相談することが苦手'},
+    {id:'prioritizeOthers',  label:'周りを優先しすぎる'},
+    {id:'prioritizeSelf',    label:'自分を優先しすぎる'},
+    {id:'compareDownward',   label:'人と比較して落ち込む'},
+    {id:'feelIntimidated',   label:'威圧的に感じやすい'}
+  ];
+
+  const moodState = { morning: {}, night: {} };
+  const bodyState = { morning: {}, night: {} };
+  const behaviorState = {};
+  const workState = {};
+  const commState = {};
+
+  const GROUP_BUILTIN = { mood: MOOD_CATEGORIES, body: BODY_CATEGORIES, behavior: BEHAVIOR_CATEGORIES, work: WORK_CATEGORIES, communication: COMM_CATEGORIES };
+  const GROUP_CONTAINERS = { mood: ['moodMorning','moodNight'], body: ['bodyMorning','bodyNight'], behavior: ['behaviorList'], work: ['workList'], communication: ['commList'] };
+  const GROUP_CONTAINER_PERIOD = { moodMorning:'morning', moodNight:'night', bodyMorning:'morning', bodyNight:'night', behaviorList:null, workList:null, commList:null };
+  const GROUP_CONTAINER_STATE = { moodMorning:moodState, moodNight:moodState, bodyMorning:bodyState, bodyNight:bodyState, behaviorList:behaviorState, workList:workState, commList:commState };
+  const GROUP_CHIPS = { mood: 'moodHiddenChips', body: 'bodyHiddenChips', behavior: 'behaviorHiddenChips', work: 'workHiddenChips', communication: 'commHiddenChips' };
+  const GROUP_SCALE_TYPE = { mood: 'five', body: 'five', behavior: 'five', work: 'tri', communication: 'tri' };
+  const itemHidden = { mood: new Set(), body: new Set(), behavior: new Set(), work: new Set(), communication: new Set() };
+  let customCategories = { mood: [], body: [], behavior: [], work: [], communication: [] };
+
+  function getAllCategories(groupKey){
+    return GROUP_BUILTIN[groupKey].concat(customCategories[groupKey]);
+  }
+
+  function scaleButtonsHtml(scaleType){
+    if(scaleType === 'tri'){
+      return `
+        <button type="button" class="tri-green" data-v="green">低</button>
+        <button type="button" class="tri-yellow" data-v="yellow">中</button>
+        <button type="button" class="tri-red" data-v="red">高</button>
+      `;
+    }
+    return `
+      <button type="button" data-v="1">1</button>
+      <button type="button" data-v="2">2</button>
+      <button type="button" data-v="3">3</button>
+      <button type="button" data-v="4">4</button>
+      <button type="button" data-v="5">5</button>
+    `;
+  }
+
+  function buildScaleGrid(containerId, categories, period, stateGroup, groupKey){
+    const scaleType = GROUP_SCALE_TYPE[groupKey] || 'five';
+    const container = $(containerId);
+    container.innerHTML = categories.map(cat => `
+      <div class="mood-row" data-mood="${cat.id}">
+        <div class="mood-label">${cat.label}</div>
+        <div class="mood-scale${scaleType === 'tri' ? ' tri-scale' : ''}">
+          ${scaleButtonsHtml(scaleType)}
+        </div>
+        ${cat.custom
+          ? `<button type="button" class="hide-btn" data-delete="${cat.id}">削除</button>`
+          : `<button type="button" class="hide-btn" data-hide="${cat.id}">非表示</button>`}
+      </div>
+    `).join('');
+    // 中身（HTML）は毎回作り直すが、クリックの受け口は最初の1回だけ登録する
+    // （再登録してしまうと1回のクリックで選択→解除が同時に起き、選べなくなるバグの原因になる）
+    if(container.dataset.scaleListenerAttached) return;
+    container.dataset.scaleListenerAttached = '1';
+    container.addEventListener('click', (e)=>{
+      const hideBtn = e.target.closest('.hide-btn');
+      if(hideBtn){
+        if(hideBtn.dataset.delete){
+          deleteCustomItem(groupKey, hideBtn.dataset.delete);
+        } else {
+          hideCategoryItem(groupKey, hideBtn.dataset.hide);
+        }
+        return;
+      }
+      const b = e.target.closest('.mood-scale button');
+      if(!b) return;
+      const row = b.closest('.mood-row');
+      const catId = row.dataset.mood;
+      const currentScaleType = GROUP_SCALE_TYPE[groupKey] || 'five';
+      const v = currentScaleType === 'tri' ? b.dataset.v : Number(b.dataset.v);
+      const state = period ? stateGroup[period] : stateGroup;
+      if(b.classList.contains('sel')){
+        b.classList.remove('sel');
+        delete state[catId];
+      } else {
+        row.querySelectorAll('.mood-scale button').forEach(x=>x.classList.remove('sel'));
+        b.classList.add('sel');
+        state[catId] = v;
+      }
+    });
+  }
+  buildScaleGrid('moodMorning', MOOD_CATEGORIES, 'morning', moodState, 'mood');
+  buildScaleGrid('moodNight', MOOD_CATEGORIES, 'night', moodState, 'mood');
+  buildScaleGrid('bodyMorning', BODY_CATEGORIES, 'morning', bodyState, 'body');
+  buildScaleGrid('bodyNight', BODY_CATEGORIES, 'night', bodyState, 'body');
+  buildScaleGrid('behaviorList', BEHAVIOR_CATEGORIES, null, behaviorState, 'behavior');
+  buildScaleGrid('workList', WORK_CATEGORIES, null, workState, 'work');
+  buildScaleGrid('commList', COMM_CATEGORIES, null, commState, 'communication');
+
+  function applyGridSelections(containerId, period, stateGroup){
+    const refreshed = period ? stateGroup[period] : stateGroup;
+    const container = $(containerId);
+    container.querySelectorAll('.mood-row').forEach(row=>{
+      const catId = row.dataset.mood;
+      const v = refreshed[catId];
+      row.querySelectorAll('.mood-scale button').forEach(b=>{
+        b.classList.toggle('sel', v != null && String(b.dataset.v) === String(v));
+      });
+    });
+  }
+
+  function rebuildGroup(groupKey){
+    const categories = getAllCategories(groupKey);
+    GROUP_CONTAINERS[groupKey].forEach(containerId=>{
+      const period = GROUP_CONTAINER_PERIOD[containerId];
+      const stateGroup = GROUP_CONTAINER_STATE[containerId];
+      buildScaleGrid(containerId, categories, period, stateGroup, groupKey);
+      applyGridSelections(containerId, period, stateGroup);
+    });
+    applyItemVisibility(groupKey);
+  }
+
+  // ---------- 気分・身体・行動：自分だけの項目を追加する ----------
+  async function persistCustomCategories(){
+    try{
+      await storage.set('customCategories', JSON.stringify(customCategories), false);
+    }catch(e){ /* 次回起動時にまた保存を試みる */ }
+  }
+
+  async function loadCustomCategories(){
+    try{
+      const res = await storage.get('customCategories', false);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        Object.keys(customCategories).forEach(k=>{
+          customCategories[k] = Array.isArray(parsed[k]) ? parsed[k] : [];
+        });
+      }
+    }catch(e){ /* 初回はまだ何も保存されていないだけなので、既定値（全グループ空配列）のままでOK */ }
+    Object.keys(customCategories).forEach(k => rebuildGroup(k));
+  }
+
+  function addCustomItem(groupKey, rawLabel){
+    const label = (rawLabel || '').trim();
+    if(!label) return;
+    const id = 'custom_' + groupKey + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    customCategories[groupKey].push({ id, label, custom: true });
+    persistCustomCategories();
+    rebuildGroup(groupKey);
+  }
+
+  function deleteCustomItem(groupKey, catId){
+    customCategories[groupKey] = customCategories[groupKey].filter(c => c.id !== catId);
+    persistCustomCategories();
+    itemHidden[groupKey].delete(catId);
+    GROUP_CONTAINERS[groupKey].forEach(containerId=>{
+      const period = GROUP_CONTAINER_PERIOD[containerId];
+      const stateGroup = GROUP_CONTAINER_STATE[containerId];
+      if(period){ delete stateGroup[period][catId]; }
+      else { delete stateGroup[catId]; }
+    });
+    rebuildGroup(groupKey);
+  }
+
+  $('moodCustomAddBtn').addEventListener('click', ()=>{
+    addCustomItem('mood', $('moodCustomInput').value);
+    $('moodCustomInput').value = '';
+  });
+  $('bodyCustomAddBtn').addEventListener('click', ()=>{
+    addCustomItem('body', $('bodyCustomInput').value);
+    $('bodyCustomInput').value = '';
+  });
+  $('behaviorCustomAddBtn').addEventListener('click', ()=>{
+    addCustomItem('behavior', $('behaviorCustomInput').value);
+    $('behaviorCustomInput').value = '';
+  });
+  $('workCustomAddBtn').addEventListener('click', ()=>{
+    addCustomItem('work', $('workCustomInput').value);
+    $('workCustomInput').value = '';
+  });
+  $('commCustomAddBtn').addEventListener('click', ()=>{
+    addCustomItem('communication', $('commCustomInput').value);
+    $('commCustomInput').value = '';
+  });
+
+  // ---------- 気分・身体・行動：使わない項目を非表示にする ----------
+  function applyItemVisibility(groupKey){
+    GROUP_CONTAINERS[groupKey].forEach(containerId=>{
+      const container = $(containerId);
+      if(!container) return;
+      container.querySelectorAll('.mood-row').forEach(row=>{
+        row.classList.toggle('item-hidden', itemHidden[groupKey].has(row.dataset.mood));
+      });
+    });
+    renderHiddenChips(groupKey);
+  }
+
+  function renderHiddenChips(groupKey){
+    const chipsEl = $(GROUP_CHIPS[groupKey]);
+    if(!chipsEl) return;
+    const hiddenIds = Array.from(itemHidden[groupKey]);
+    if(hiddenIds.length === 0){
+      chipsEl.innerHTML = '';
+      return;
+    }
+    const byId = {};
+    getAllCategories(groupKey).forEach(c => byId[c.id] = c.label);
+    chipsEl.innerHTML = `
+      <span style="font-size:11.5px; color:var(--ink-soft); align-self:center;">非表示中：</span>
+      ${hiddenIds.map(id => `<button type="button" class="chip" data-unhide="${id}"><span class="plus">＋</span>${byId[id] || id}</button>`).join('')}
+    `;
+    chipsEl.querySelectorAll('.chip').forEach(chip=>{
+      chip.addEventListener('click', ()=> unhideCategoryItem(groupKey, chip.dataset.unhide));
+    });
+  }
+
+  async function persistItemVisibility(){
+    const payload = {};
+    Object.keys(itemHidden).forEach(k => payload[k] = Array.from(itemHidden[k]));
+    try{
+      await storage.set('itemVisibilityPrefs', JSON.stringify(payload), false);
+    }catch(e){ /* 次回起動時にまた保存を試みる */ }
+  }
+
+  function hideCategoryItem(groupKey, catId){
+    itemHidden[groupKey].add(catId);
+    applyItemVisibility(groupKey);
+    persistItemVisibility();
+  }
+  function unhideCategoryItem(groupKey, catId){
+    itemHidden[groupKey].delete(catId);
+    applyItemVisibility(groupKey);
+    persistItemVisibility();
+  }
+
+  async function loadItemVisibility(){
+    try{
+      const res = await storage.get('itemVisibilityPrefs', false);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        Object.keys(itemHidden).forEach(k=>{
+          itemHidden[k] = new Set(Array.isArray(parsed[k]) ? parsed[k] : []);
+        });
+      }
+    }catch(e){ /* 初回はプリセットなしでOK */ }
+    Object.keys(itemHidden).forEach(k => applyItemVisibility(k));
+  }
+
+  function setScaleGridValues(containerId, period, stateGroup, values){
+    const state = period ? stateGroup[period] : stateGroup;
+    if(period){
+      stateGroup[period] = Object.assign({}, values || {});
+    } else {
+      Object.keys(stateGroup).forEach(k=>delete stateGroup[k]);
+      Object.assign(stateGroup, values || {});
+    }
+    const refreshed = period ? stateGroup[period] : stateGroup;
+    const container = $(containerId);
+    container.querySelectorAll('.mood-row').forEach(row=>{
+      const catId = row.dataset.mood;
+      const v = refreshed[catId];
+      row.querySelectorAll('.mood-scale button').forEach(b=>{
+        b.classList.toggle('sel', v != null && String(b.dataset.v) === String(v));
+      });
+    });
+  }
+
+  let currentProfile = null;
+  let currentTarget = null;
+
+  // ---------- タブ切り替え ----------
+  document.querySelectorAll('nav.tabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      btn.classList.add('active');
+      $('view-'+btn.dataset.view).classList.add('active');
+    });
+  });
+
+  $('todayLine').textContent = new Date().toLocaleDateString('ja-JP', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
+  $('entryDate').value = todayISO();
+  $('monthPicker').value = todayISO().slice(0,7);
+
+  // ---------- 尺度ボタン ----------
+  function setupScale(containerId, hiddenState){
+    const el = $(containerId);
+    el.addEventListener('click', (e)=>{
+      const b = e.target.closest('button');
+      if(!b) return;
+      el.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      hiddenState.value = Number(b.dataset.v);
+    });
+  }
+  // （疲労感は「身体」セクションの身体的疲労（朝/夜）に統合）
+
+  // ---------- 服薬の繰り返し項目（朝・昼・夜・寝る前・頓服） ----------
+  const MED_SLOTS = ['morning','noon','evening','beforeBed','prn'];
+  const MED_SLOT_LABEL = {morning:'朝', noon:'昼', evening:'夜', beforeBed:'寝る前', prn:'頓服'};
+
+  function medRow(slot, data){
+    const row = document.createElement('div');
+    row.className = 'repeat-item';
+    if(slot === 'prn'){
+      data = data || {name:'', time:'', note:''};
+      row.innerHTML = `
+        <button type="button" class="rm">✕</button>
+        <div class="field-row">
+          <div class="field"><label>時刻</label><input type="time" class="med-time" value="${escapeAttr(data.time)}"></div>
+          <div class="field"><label>薬の名前</label><input type="text" class="med-name" value="${escapeAttr(data.name)}" placeholder="例）頓服の鎮痛薬"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>メモ（任意・理由など）</label><input type="text" class="med-note" value="${escapeAttr(data.note)}" placeholder="例）頭痛のため"></div>
+        </div>
+      `;
+    } else {
+      data = data || {name:'', taken:true};
+      row.innerHTML = `
+        <button type="button" class="rm">✕</button>
+        <div class="field-row">
+          <div class="field"><label>薬の名前</label><input type="text" class="med-name" value="${escapeAttr(data.name)}" placeholder="例）睡眠導入薬"></div>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" class="med-taken" ${data.taken ? 'checked' : ''}>
+          <label>服用した</label>
+        </div>
+      `;
+    }
+    row.querySelector('.rm').addEventListener('click', ()=>row.remove());
+    return row;
+  }
+  function escapeAttr(s){
+    return String(s == null ? '' : s).replace(/"/g,'&quot;');
+  }
+  MED_SLOTS.forEach(slot=>{
+    document.querySelector(`button[data-add-med="${slot}"]`).addEventListener('click', ()=>{
+      $('med-'+slot+'List').appendChild(medRow(slot));
+    });
+  });
+
+  // ---------- 昼寝の繰り返し項目 ----------
+  function napRow(data){
+    data = data || {time:'', minutes:''};
+    const row = document.createElement('div');
+    row.className = 'repeat-item';
+    row.innerHTML = `
+      <button type="button" class="rm">✕</button>
+      <div class="field-row">
+        <div class="field"><label>開始時刻</label><input type="time" class="nap-time" value="${escapeAttr(data.time)}"></div>
+        <div class="field"><label>長さ（分）</label><input type="number" min="0" class="nap-min" value="${data.minutes ?? ''}" placeholder="例）20"></div>
+      </div>
+    `;
+    row.querySelector('.rm').addEventListener('click', ()=>{ row.remove(); recalcNapTotal(); });
+    row.querySelector('.nap-min').addEventListener('input', recalcNapTotal);
+    return row;
+  }
+  $('addNap').addEventListener('click', ()=>{
+    $('napList').appendChild(napRow());
+  });
+  function recalcNapTotal(){
+    const mins = Array.from($('napList').querySelectorAll('.nap-min'))
+      .map(i => i.value ? Number(i.value) : null)
+      .filter(v => v != null && !isNaN(v));
+    const noteEl = $('napTotalNote');
+    if(mins.length === 0){ noteEl.textContent = ''; return; }
+    noteEl.textContent = `この日の昼寝の合計：${mins.reduce((a,b)=>a+b,0)}分`;
+  }
+
+  // ---------- 服薬区分の折りたたみ（使わない区分をバー状に縮小） ----------
+  let medSlotCollapsed = {};
+
+  function applySlotCollapsed(slot, collapsed){
+    const el = document.querySelector(`.meal-slot[data-med-slot="${slot}"]`);
+    if(el) el.classList.toggle('collapsed', !!collapsed);
+  }
+
+  async function persistMedSlotPrefs(){
+    try{
+      await storage.set('medSlotPrefs', JSON.stringify(medSlotCollapsed), false);
+    }catch(e){ /* 次回起動時にまた保存を試みる */ }
+  }
+
+  document.querySelectorAll('.meal-slot[data-med-slot] .med-slot-header').forEach(header=>{
+    header.addEventListener('click', async ()=>{
+      const slot = header.closest('.meal-slot').dataset.medSlot;
+      const collapsed = !medSlotCollapsed[slot];
+      medSlotCollapsed[slot] = collapsed;
+      applySlotCollapsed(slot, collapsed);
+      await persistMedSlotPrefs();
+    });
+  });
+
+  async function loadMedSlotPrefs(){
+    try{
+      const res = await storage.get('medSlotPrefs', false);
+      if(res && res.value){
+        medSlotCollapsed = JSON.parse(res.value);
+        MED_SLOTS.forEach(slot => applySlotCollapsed(slot, medSlotCollapsed[slot]));
+      }
+    }catch(e){
+      medSlotCollapsed = {};
+    }
+  }
+
+  // その日に薬が記録されている区分は、折りたたみ設定に関わらず自動で開く
+  function refreshMedSlotVisibility(entryMeds){
+    MED_SLOTS.forEach(slot=>{
+      const hasItems = entryMeds && entryMeds[slot] && entryMeds[slot].length > 0;
+      applySlotCollapsed(slot, hasItems ? false : !!medSlotCollapsed[slot]);
+    });
+  }
+
+  // 折りたたんでいる区分でも、最近よく使うようになってきたら自動的に通常表示に戻す
+  async function maybeAutoRestoreMedSlots(entry){
+    const candidateSlots = MED_SLOTS.filter(slot =>
+      medSlotCollapsed[slot] && entry.medications[slot] && entry.medications[slot].length > 0
+    );
+    if(candidateSlots.length === 0) return;
+
+    const anchor = new Date(entry.date);
+    const restored = [];
+    for(const slot of candidateSlots){
+      let recentDaysWithData = 1; // 今回保存した分
+      for(let i = 1; i <= 6; i++){
+        const d = new Date(anchor);
+        d.setDate(d.getDate() - i);
+        const key = 'entry:' + isoDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+        try{
+          const r = await storage.get(key, false);
+          if(r && r.value){
+            const e = JSON.parse(r.value);
+            if(e.medications && e.medications[slot] && e.medications[slot].length > 0){
+              recentDaysWithData++;
+            }
+          }
+        }catch(err){ /* その日の記録がなければスキップ */ }
+      }
+      if(recentDaysWithData >= 2){
+        medSlotCollapsed[slot] = false;
+        restored.push(slot);
+      }
+    }
+    if(restored.length){
+      await persistMedSlotPrefs();
+      MED_SLOTS.forEach(slot => applySlotCollapsed(slot, medSlotCollapsed[slot]));
+      const labels = restored.map(s => MED_SLOT_LABEL[s]).join('・');
+      return `（${labels}の服薬欄を、最近よく使われているので通常表示に戻しました）`;
+    }
+    return '';
+  }
+
+  // ---------- 食事スロット（朝食・昼食・夕食・間食） ----------
+  MEAL_SLOTS.forEach(slot=>{
+    const el = document.querySelector(`.meal-slot[data-slot="${slot}"]`);
+    el.querySelector('.slot-cal').addEventListener('input', recalcDayTotal);
+  });
+
+  function recalcDayTotal(){
+    const cals = MEAL_SLOTS.map(slot=>{
+      const v = document.querySelector(`.meal-slot[data-slot="${slot}"] .slot-cal`).value;
+      return v ? Number(v) : null;
+    }).filter(v=>v!=null && !isNaN(v));
+
+    const totalEl = $('dayCalTotal');
+    const burnEl = $('dayCalBurn');
+    const netEl = $('dayCalNet');
+    const targetEl = $('dayCalTarget');
+    const diffEl = $('dayCalDiff');
+    const noProfileEl = $('noProfileNote');
+
+    let total = null;
+    if(cals.length){
+      total = cals.reduce((a,b)=>a+b,0);
+      totalEl.innerHTML = `${total} <small>kcal</small>`;
+    } else {
+      totalEl.textContent = '―';
+    }
+
+    const exCalVal = $('exCal').value;
+    const burn = exCalVal ? Number(exCalVal) : null;
+    burnEl.innerHTML = burn != null ? `${burn} <small>kcal</small>` : '―';
+
+    let net = null;
+    if(total != null){
+      net = total - (burn || 0);
+      netEl.innerHTML = `${net} <small>kcal</small>`;
+    } else {
+      netEl.textContent = '―';
+    }
+
+    if(currentTarget){
+      targetEl.innerHTML = `${currentTarget} <small>kcal</small>`;
+      noProfileEl.style.display = 'none';
+      if(net != null){
+        const diff = net - currentTarget;
+        const cls = diff > 0 ? 'over' : 'under';
+        const sign = diff > 0 ? '+' : '';
+        diffEl.innerHTML = `<span class="cal-diff ${cls}">${sign}${diff} kcal</span>`;
+      } else {
+        diffEl.textContent = '―';
+      }
+    } else {
+      targetEl.textContent = '未設定';
+      diffEl.textContent = '―';
+      noProfileEl.style.display = 'block';
+    }
+  }
+
+  $('exCal').addEventListener('input', recalcDayTotal);
+
+  // 歩数からの消費カロリー自動計算（体重を使った簡易式。AIではなく計算式なのでオフラインでも動作）
+  function calcCaloriesFromSteps(steps){
+    const weight = (currentProfile && currentProfile.weight) ? currentProfile.weight : 60;
+    const KCAL_PER_STEP_PER_KG = 0.0005; // 目安：体重60kgで10,000歩 ≒ 300kcal
+    return Math.round(steps * weight * KCAL_PER_STEP_PER_KG);
+  }
+  $('exSteps').addEventListener('input', ()=>{
+    const steps = $('exSteps').value ? Number($('exSteps').value) : null;
+    const note = $('exCalNote');
+    if(steps == null || isNaN(steps) || steps <= 0){
+      note.textContent = '';
+      return;
+    }
+    const kcal = calcCaloriesFromSteps(steps);
+    $('exCal').value = kcal;
+    const weightNote = (currentProfile && currentProfile.weight)
+      ? `体重${currentProfile.weight}kgをもとに計算`
+      : '体重が未設定のため60kgとして概算（私タブで体重を登録すると精度が上がります）';
+    note.textContent = `歩数から自動計算：${kcal} kcal（${weightNote}）。数値は手動でも修正できます。`;
+    recalcDayTotal();
+  });
+
+  // ---------- 保存・読み込み（今日の記録） ----------
+  function collectEntry(){
+    const meds = {};
+    MED_SLOTS.forEach(slot=>{
+      const rows = Array.from($('med-'+slot+'List').querySelectorAll('.repeat-item'));
+      if(slot === 'prn'){
+        meds[slot] = rows.map(r=>({
+          name: r.querySelector('.med-name').value.trim(),
+          time: r.querySelector('.med-time').value,
+          note: r.querySelector('.med-note').value.trim()
+        })).filter(m=>m.name || m.time || m.note);
+      } else {
+        meds[slot] = rows.map(r=>({
+          name: r.querySelector('.med-name').value.trim(),
+          taken: r.querySelector('.med-taken').checked
+        })).filter(m=>m.name);
+      }
+    });
+
+    const meals = {};
+    MEAL_SLOTS.forEach(slot=>{
+      const el = document.querySelector(`.meal-slot[data-slot="${slot}"]`);
+      const time = el.querySelector('.slot-time').value;
+      const content = el.querySelector('.slot-content').value.trim();
+      const calVal = el.querySelector('.slot-cal').value;
+      meals[slot] = {
+        time: time,
+        content: content,
+        calories: calVal ? Number(calVal) : null
+      };
+    });
+
+    let sleepHours = $('sleepHours').value ? Number($('sleepHours').value) : null;
+    if(sleepHours == null && $('bedTime').value && $('wakeTime').value){
+      sleepHours = computeSleepHours($('bedTime').value, $('wakeTime').value);
+    }
+
+    return {
+      date: $('entryDate').value,
+      bedTime: $('bedTime').value,
+      wakeTime: $('wakeTime').value,
+      poorOnset: $('poorOnset').checked,
+      hardToReturnSleep: $('hardToReturnSleep').checked,
+      wakeCount: $('wakeCount').value ? Number($('wakeCount').value) : 0,
+      earlyWake: $('earlyWake').checked,
+      sleepHours: sleepHours,
+      naps: Array.from($('napList').querySelectorAll('.repeat-item')).map(r=>({
+        time: r.querySelector('.nap-time').value,
+        minutes: r.querySelector('.nap-min').value ? Number(r.querySelector('.nap-min').value) : null
+      })).filter(n=>n.time || n.minutes != null),
+      medications: meds,
+      meals: meals,
+      exMin: $('exMin').value ? Number($('exMin').value) : null,
+      exContent: $('exContent').value.trim(),
+      exSteps: $('exSteps').value ? Number($('exSteps').value) : null,
+      exCal: $('exCal').value ? Number($('exCal').value) : null,
+      alcohol: $('alcohol').value ? Number($('alcohol').value) : 0,
+      moodMorning: Object.assign({}, moodState.morning),
+      moodNight: Object.assign({}, moodState.night),
+      bodyMorning: Object.assign({}, bodyState.morning),
+      bodyNight: Object.assign({}, bodyState.night),
+      behavior: Object.assign({}, behaviorState),
+      work: Object.assign({}, workState),
+      communication: Object.assign({}, commState),
+      memo: $('memo').value.trim()
+    };
+  }
+
+  function computeSleepHours(bed, wake){
+    const [bh,bm] = bed.split(':').map(Number);
+    const [wh,wm] = wake.split(':').map(Number);
+    let bedMinutes = bh*60+bm;
+    let wakeMinutes = wh*60+wm;
+    if(wakeMinutes <= bedMinutes) wakeMinutes += 24*60;
+    let total = (wakeMinutes - bedMinutes) / 60;
+    return Math.max(0, Math.round(total*10)/10);
+  }
+
+  function fillForm(entry){
+    $('bedTime').value = entry.bedTime || '';
+    $('wakeTime').value = entry.wakeTime || '';
+    $('poorOnset').checked = !!entry.poorOnset;
+    $('hardToReturnSleep').checked = !!entry.hardToReturnSleep;
+    $('wakeCount').value = entry.wakeCount ?? '';
+    $('earlyWake').checked = !!entry.earlyWake;
+    $('sleepHours').value = entry.sleepHours ?? '';
+
+    $('napList').innerHTML = '';
+    (entry.naps || []).forEach(n => $('napList').appendChild(napRow(n)));
+    recalcNapTotal();
+
+    MED_SLOTS.forEach(slot=>{
+      const listEl = $('med-'+slot+'List');
+      listEl.innerHTML = '';
+      const items = (entry.medications && entry.medications[slot]) ? entry.medications[slot] : [];
+      items.forEach(m => listEl.appendChild(medRow(slot, m)));
+    });
+    refreshMedSlotVisibility(entry.medications);
+
+    MEAL_SLOTS.forEach(slot=>{
+      const el = document.querySelector(`.meal-slot[data-slot="${slot}"]`);
+      const m = (entry.meals && entry.meals[slot]) ? entry.meals[slot] : {};
+      el.querySelector('.slot-time').value = m.time || '';
+      el.querySelector('.slot-content').value = m.content || '';
+      el.querySelector('.slot-cal').value = m.calories ?? '';
+    });
+
+    $('exMin').value = entry.exMin ?? '';
+    $('exContent').value = entry.exContent || '';
+    $('exSteps').value = entry.exSteps ?? '';
+    $('exCal').value = entry.exCal ?? '';
+    $('exCalNote').textContent = '';
+    recalcDayTotal();
+
+    $('alcohol').value = entry.alcohol ?? '';
+    $('memo').value = entry.memo || '';
+
+    setScaleGridValues('moodMorning', 'morning', moodState, entry.moodMorning);
+    setScaleGridValues('moodNight', 'night', moodState, entry.moodNight);
+    setScaleGridValues('bodyMorning', 'morning', bodyState, entry.bodyMorning);
+    setScaleGridValues('bodyNight', 'night', bodyState, entry.bodyNight);
+    setScaleGridValues('behaviorList', null, behaviorState, entry.behavior);
+    setScaleGridValues('workList', null, workState, entry.work);
+    setScaleGridValues('commList', null, commState, entry.communication);
+  }
+
+  function clearForm(){ fillForm({}); }
+
+  async function loadEntryForDate(date){
+    $('loadStatus').textContent = '読み込み中…';
+    try{
+      const res = await storage.get('entry:'+date, false);
+      if(res && res.value){
+        fillForm(JSON.parse(res.value));
+        $('loadStatus').textContent = 'この日の記録を編集しています。';
+      } else {
+        clearForm();
+        $('loadStatus').textContent = 'この日はまだ記録がありません。新規に入力できます。';
+      }
+    }catch(e){
+      clearForm();
+      $('loadStatus').textContent = 'この日はまだ記録がありません。新規に入力できます。';
+    }
+  }
+
+  $('entryDate').addEventListener('change', ()=>{
+    loadEntryForDate($('entryDate').value);
+    if(calendarState){
+      const [y,m] = $('entryDate').value.split('-').map(Number);
+      calendarState.year = y; calendarState.month = m;
+      renderCalendar();
+    }
+  });
+
+  async function saveEntry(statusId){
+    const entry = collectEntry();
+    const statusEl = $(statusId);
+    if(!entry.date){
+      statusEl.textContent = '日付を選択してください。';
+      return;
+    }
+    statusEl.textContent = '保存中…';
+    try{
+      const result = await storage.set('entry:'+entry.date, JSON.stringify(entry), false);
+      let msg = result ? `${entry.date} の記録を保存しました。` : '保存に失敗しました。もう一度お試しください。';
+      if(result){
+        const restoreNote = await maybeAutoRestoreMedSlots(entry);
+        if(restoreNote) msg += restoreNote;
+      }
+      $('saveStatus').textContent = msg;
+      $('saveStatus2').textContent = msg;
+      $('saveStatus3').textContent = msg;
+      if(result){
+        entryDatesSet.add(entry.date);
+        renderCalendar();
+      }
+    }catch(e){
+      const msg = '保存中にエラーが発生しました。もう一度お試しください。';
+      $('saveStatus').textContent = msg;
+      $('saveStatus2').textContent = msg;
+      $('saveStatus3').textContent = msg;
+    }
+  }
+  $('saveBtn').addEventListener('click', ()=> saveEntry('saveStatus'));
+  $('saveBtn2').addEventListener('click', ()=> saveEntry('saveStatus2'));
+  $('saveBtn3').addEventListener('click', ()=> saveEntry('saveStatus3'));
+
+  // ---------- カレンダー（記録のある日が分かる） ----------
+  let calendarState = null;
+  const entryDatesSet = new Set();
+  const DOW_LABELS = ['日','月','火','水','木','金','土'];
+
+  async function refreshEntryDatesSet(){
+    try{
+      const res = await storage.list('entry:', false);
+      const keys = (res && res.keys) ? res.keys : [];
+      entryDatesSet.clear();
+      keys.forEach(k => entryDatesSet.add(k.slice('entry:'.length)));
+    }catch(e){ /* 一覧が取れなければ空のまま */ }
+  }
+
+  function renderCalendar(){
+    if(!calendarState) return;
+    const { year, month } = calendarState;
+    $('calTitle').textContent = `${year}年${month}月`;
+    const firstDow = new Date(year, month-1, 1).getDay();
+    const total = new Date(year, month, 0).getDate();
+    const todayStr = todayISO();
+    const selectedStr = $('entryDate').value;
+
+    let cellsHtml = DOW_LABELS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+    for(let i=0; i<firstDow; i++) cellsHtml += `<div class="cal-day empty"></div>`;
+    for(let d=1; d<=total; d++){
+      const dateStr = isoDate(year, month, d);
+      const classes = ['cal-day'];
+      if(entryDatesSet.has(dateStr)) classes.push('has-entry');
+      if(dateStr === todayStr) classes.push('today');
+      if(dateStr === selectedStr) classes.push('selected');
+      cellsHtml += `<div class="${classes.join(' ')}" data-date="${dateStr}">${d}</div>`;
+    }
+    $('calendarGrid').innerHTML = cellsHtml;
+  }
+
+  $('calendarGrid').addEventListener('click', (e)=>{
+    const cell = e.target.closest('.cal-day[data-date]');
+    if(!cell) return;
+    $('entryDate').value = cell.dataset.date;
+    loadEntryForDate(cell.dataset.date);
+    renderCalendar();
+  });
+
+  $('calPrevBtn').addEventListener('click', ()=>{
+    calendarState.month -= 1;
+    if(calendarState.month < 1){ calendarState.month = 12; calendarState.year -= 1; }
+    renderCalendar();
+  });
+  $('calNextBtn').addEventListener('click', ()=>{
+    calendarState.month += 1;
+    if(calendarState.month > 12){ calendarState.month = 1; calendarState.year += 1; }
+    renderCalendar();
+  });
+
+  $('toggleCalendarBtn').addEventListener('click', async ()=>{
+    const wrap = $('calendarWrap');
+    const opening = wrap.style.display === 'none';
+    if(opening){
+      if(!calendarState){
+        const [y,m] = ($('entryDate').value || todayISO()).split('-').map(Number);
+        calendarState = { year: y, month: m };
+      }
+      await refreshEntryDatesSet();
+      renderCalendar();
+      wrap.style.display = 'block';
+      $('toggleCalendarBtn').textContent = 'カレンダーを閉じる';
+    } else {
+      wrap.style.display = 'none';
+      $('toggleCalendarBtn').textContent = 'カレンダーで見る';
+    }
+  });
+
+  // ---------- プロフィール ----------
+  function computeTarget(p){
+    if(!p || !p.age || !p.height || !p.weight) return null;
+    let bmr;
+    if(p.sex === 'female'){
+      bmr = 10*p.weight + 6.25*p.height - 5*p.age - 161;
+    } else {
+      bmr = 10*p.weight + 6.25*p.height - 5*p.age + 5;
+    }
+    const activity = Number(p.activity) || 1.2;
+    return Math.round(bmr * activity);
+  }
+
+  function renderProfileResult(p, target){
+    if(!target){
+      $('pfResult').innerHTML = '';
+      return;
+    }
+    const condHtml = p.conditions ? `<div style="margin-top:6px; font-size:12.5px; color:var(--ink-soft);">記録中の持病・既往症：${p.conditions}</div>` : '';
+    $('pfResult').innerHTML = `
+      <div class="profile-result">
+        <div class="big">${target} <small>kcal / 日（目安）</small></div>
+        <div class="formula">Mifflin-St Jeorの式による基礎代謝量に、活動量の係数をかけた概算値です。</div>
+        ${condHtml}
+      </div>
+    `;
+  }
+
+  async function loadProfile(){
+    try{
+      const res = await storage.get('profile', false);
+      if(res && res.value){
+        currentProfile = JSON.parse(res.value);
+        $('pfSex').value = currentProfile.sex || 'male';
+        $('pfAge').value = currentProfile.age ?? '';
+        $('pfHeight').value = currentProfile.height ?? '';
+        $('pfWeight').value = currentProfile.weight ?? '';
+        $('pfActivity').value = currentProfile.activity ?? '1.2';
+        $('pfConditions').value = currentProfile.conditions || '';
+        $('pfGoodSleepHours').value = currentProfile.goodSleepHours ?? '';
+        currentTarget = computeTarget(currentProfile);
+        renderProfileResult(currentProfile, currentTarget);
+      }
+    }catch(e){
+      currentProfile = null;
+      currentTarget = null;
+    }
+    recalcDayTotal();
+  }
+
+  $('pfSaveBtn').addEventListener('click', async ()=>{
+    const p = Object.assign({}, currentProfile, {
+      sex: $('pfSex').value,
+      age: $('pfAge').value ? Number($('pfAge').value) : null,
+      height: $('pfHeight').value ? Number($('pfHeight').value) : null,
+      weight: $('pfWeight').value ? Number($('pfWeight').value) : null,
+      activity: $('pfActivity').value,
+      conditions: $('pfConditions').value.trim()
+    });
+    if(!p.age || !p.height || !p.weight){
+      $('pfStatus').textContent = '年齢・身長・体重を入力してください。';
+      return;
+    }
+    $('pfStatus').textContent = '保存中…';
+    try{
+      const result = await storage.set('profile', JSON.stringify(p), false);
+      if(result){
+        currentProfile = p;
+        currentTarget = computeTarget(p);
+        renderProfileResult(p, currentTarget);
+        recalcDayTotal();
+        $('pfStatus').textContent = '保存しました。';
+      } else {
+        $('pfStatus').textContent = '保存に失敗しました。もう一度お試しください。';
+      }
+    }catch(e){
+      $('pfStatus').textContent = '保存中にエラーが発生しました。もう一度お試しください。';
+    }
+  });
+
+  $('pfSleepSaveBtn').addEventListener('click', async ()=>{
+    const goodSleepHours = $('pfGoodSleepHours').value ? Number($('pfGoodSleepHours').value) : null;
+    if(!goodSleepHours){
+      $('pfSleepStatus').textContent = '時間を入力してください。';
+      return;
+    }
+    $('pfSleepStatus').textContent = '保存中…';
+    const p = Object.assign({}, currentProfile, { goodSleepHours });
+    try{
+      const result = await storage.set('profile', JSON.stringify(p), false);
+      if(result){
+        currentProfile = p;
+        $('pfSleepStatus').textContent = '保存しました。';
+      } else {
+        $('pfSleepStatus').textContent = '保存に失敗しました。もう一度お試しください。';
+      }
+    }catch(e){
+      $('pfSleepStatus').textContent = '保存中にエラーが発生しました。もう一度お試しください。';
+    }
+  });
+
+  // ===================== 月次まとめ =====================
+  $('runSummary').addEventListener('click', runSummary);
+
+  async function runSummary(){
+    const month = $('monthPicker').value;
+    const area = $('summaryArea');
+    if(!month){
+      area.innerHTML = '<div class="summary-empty">月を選んでください。</div>';
+      return;
+    }
+    area.innerHTML = '<div class="summary-empty">集計しています…</div>';
+
+    let keysRes;
+    try{
+      keysRes = await storage.list('entry:', false);
+    }catch(e){
+      area.innerHTML = '<div class="summary-empty">記録の読み込みに失敗しました。もう一度お試しください。</div>';
+      return;
+    }
+    const allKeys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+    const monthKeys = allKeys.filter(k => k.startsWith('entry:'+month));
+
+    if(monthKeys.length === 0){
+      area.innerHTML = `<div class="summary-empty">${month} の記録がまだありません。</div>`;
+      return;
+    }
+
+    const entries = [];
+    for(const k of monthKeys){
+      try{
+        const r = await storage.get(k, false);
+        if(r && r.value) entries.push(JSON.parse(r.value));
+      }catch(e){ /* skip */ }
+    }
+    entries.sort((a,b)=> a.date.localeCompare(b.date));
+
+    renderSummary(month, entries);
+  }
+
+  function avg(nums){
+    const v = nums.filter(n => n!=null && !isNaN(n));
+    if(v.length===0) return null;
+    return v.reduce((a,b)=>a+b,0)/v.length;
+  }
+  function fmt(n, digits){
+    if(n==null) return '―';
+    return n.toFixed(digits==null?1:digits);
+  }
+
+  function dayMealCalories(e){
+    if(!e.meals) return null;
+    if(Array.isArray(e.meals)){
+      const cals = e.meals.map(m=>m.calories).filter(c=>c!=null && !isNaN(c));
+      return cals.length ? cals.reduce((a,b)=>a+b,0) : null;
+    }
+    const cals = MEAL_SLOTS.map(s => e.meals[s] ? e.meals[s].calories : null).filter(c=>c!=null && !isNaN(c));
+    return cals.length ? cals.reduce((a,b)=>a+b,0) : null;
+  }
+
+  function periodCategoryStats(categories, morningField, nightField, entries){
+    return categories.map(cat=>{
+      const morningVals = entries.map(e => (e[morningField] && e[morningField][cat.id] != null) ? e[morningField][cat.id] : null).filter(v=>v!=null);
+      const nightVals = entries.map(e => (e[nightField] && e[nightField][cat.id] != null) ? e[nightField][cat.id] : null).filter(v=>v!=null);
+      return {
+        id: cat.id,
+        label: cat.label,
+        morningAvg: avg(morningVals),
+        nightAvg: avg(nightVals),
+        morningCount: morningVals.length,
+        nightCount: nightVals.length
+      };
+    }).filter(m => m.morningCount > 0 || m.nightCount > 0);
+  }
+
+  function singleCategoryStats(categories, field, entries){
+    return categories.map(cat=>{
+      const vals = entries.map(e => (e[field] && e[field][cat.id] != null) ? e[field][cat.id] : null).filter(v=>v!=null);
+      return { id: cat.id, label: cat.label, avgVal: avg(vals), count: vals.length };
+    }).filter(m => m.count > 0);
+  }
+
+  function renderCategoryTable(stats, emptyLabel){
+    if(!stats.length) return `<div class="summary-empty" style="margin-bottom:20px;">${emptyLabel}</div>`;
+    return `
+      <div class="table-wrap" style="margin-bottom:20px;">
+        <table class="day-table">
+          <thead><tr><th></th><th>朝の平均</th><th>朝の日数</th><th>夜の平均</th><th>夜の日数</th></tr></thead>
+          <tbody>
+            ${stats.map(m=>`
+              <tr>
+                <td>${m.label}</td>
+                <td>${fmt(m.morningAvg)}</td>
+                <td>${m.morningCount}</td>
+                <td>${fmt(m.nightAvg)}</td>
+                <td>${m.nightCount}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  function renderSingleTable(stats, emptyLabel){
+    if(!stats.length) return `<div class="summary-empty" style="margin-bottom:20px;">${emptyLabel}</div>`;
+    return `
+      <div class="table-wrap" style="margin-bottom:20px;">
+        <table class="day-table">
+          <thead><tr><th></th><th>平均</th><th>記録日数</th></tr></thead>
+          <tbody>
+            ${stats.map(m=>`
+              <tr><td>${m.label}</td><td>${fmt(m.avgVal)}</td><td>${m.count}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  // 低・中・高（作業・コミュニケーション）の集計
+  function triCategoryStats(categories, field, entries){
+    return categories.map(cat=>{
+      let green=0, yellow=0, red=0;
+      entries.forEach(e=>{
+        const v = e[field] && e[field][cat.id];
+        if(v === 'green') green++;
+        else if(v === 'yellow') yellow++;
+        else if(v === 'red') red++;
+      });
+      const total = green + yellow + red;
+      return { id: cat.id, label: cat.label, green, yellow, red, total };
+    }).filter(m => m.total > 0);
+  }
+
+  function renderTriTable(stats, emptyLabel){
+    if(!stats.length) return `<div class="summary-empty" style="margin-bottom:20px;">${emptyLabel}</div>`;
+    return `
+      <div class="table-wrap" style="margin-bottom:20px;">
+        <table class="day-table">
+          <thead><tr><th></th><th style="color:#3E6B4F;">低</th><th style="color:#C9A227;">中</th><th style="color:#A6482F;">高</th><th>記録日数</th></tr></thead>
+          <tbody>
+            ${stats.map(m=>`
+              <tr><td>${m.label}</td><td>${m.green || ''}</td><td>${m.yellow || ''}</td><td>${m.red || ''}</td><td>${m.total}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  function renderSummary(month, entries){
+    const n = entries.length;
+    const sleepHoursAvg = avg(entries.map(e=>e.sleepHours));
+    const wakeCountAvg = avg(entries.map(e=>e.wakeCount));
+    const wakeCountTotal = entries.reduce((s,e)=> s + (e.wakeCount||0), 0);
+    const earlyWakeDays = entries.filter(e=>e.earlyWake).length;
+    const poorOnsetDays = entries.filter(e=>e.poorOnset).length;
+    const hardToReturnDays = entries.filter(e=>e.hardToReturnSleep).length;
+    const exMinAvg = avg(entries.map(e=>e.exMin));
+    const exStepsAvg = avg(entries.map(e=>e.exSteps));
+    const napMinAvg = avg(entries.map(e => {
+      const naps = e.naps || [];
+      const mins = naps.map(n=>n.minutes).filter(v=>v!=null);
+      return mins.length ? mins.reduce((a,b)=>a+b,0) : (naps.length ? 0 : null);
+    }));
+    const napDays = entries.filter(e => (e.naps||[]).length > 0).length;
+    const alcoholAvg = avg(entries.map(e=>e.alcohol));
+
+    // 気分・身体はカテゴリごとに朝/夜の平均、行動は1日1回分の平均を出す
+    const moodStats = periodCategoryStats(getAllCategories('mood'), 'moodMorning', 'moodNight', entries);
+    const bodyStats = periodCategoryStats(getAllCategories('body'), 'bodyMorning', 'bodyNight', entries);
+    const behaviorStats = singleCategoryStats(getAllCategories('behavior'), 'behavior', entries);
+    const workStats = triCategoryStats(getAllCategories('work'), 'work', entries);
+    const commStats = triCategoryStats(getAllCategories('communication'), 'communication', entries);
+
+    const physicalFatigueStat = bodyStats.find(m => m.id === 'physicalFatigue');
+    const fatigueAvg = physicalFatigueStat
+      ? avg([physicalFatigueStat.morningAvg, physicalFatigueStat.nightAvg].filter(v=>v!=null))
+      : null;
+
+    const dayCalories = entries.map(dayMealCalories);
+    const calAvg = avg(dayCalories);
+    const daysWithCal = dayCalories.filter(c=>c!=null).length;
+
+    const exCalAvg = avg(entries.map(e=>e.exCal));
+    const dayNetCalories = entries.map((e,i) => dayCalories[i] != null ? dayCalories[i] - (e.exCal || 0) : null);
+    const netCalAvg = avg(dayNetCalories);
+    const diffAvg = (currentTarget && netCalAvg!=null) ? Math.round(netCalAvg - currentTarget) : null;
+
+    let medPlanned = 0, medMissed = 0, prnCount = 0;
+    entries.forEach(e => {
+      MED_SLOTS.forEach(slot=>{
+        const items = (e.medications && e.medications[slot]) ? e.medications[slot] : [];
+        if(slot === 'prn'){
+          prnCount += items.length;
+        } else {
+          items.forEach(m=>{
+            medPlanned++;
+            if(!m.taken) medMissed++;
+          });
+        }
+      });
+    });
+
+    const notes = [];
+    if(sleepHoursAvg != null && sleepHoursAvg < 6){
+      notes.push(`平均睡眠時間が ${fmt(sleepHoursAvg)} 時間と、6時間を下回っています。`);
+    }
+    if(n>0 && poorOnsetDays / n >= 0.3){
+      notes.push(`寝つきが悪かった日が ${poorOnsetDays}／${n} 日と、月の3割以上を占めています。`);
+    }
+    if(n>0 && hardToReturnDays / n >= 0.3){
+      notes.push(`途中で起きてからなかなか眠れなかった日が ${hardToReturnDays}／${n} 日と、月の3割以上を占めています。`);
+    }
+    if(n>0 && earlyWakeDays / n >= 0.3){
+      notes.push(`早朝覚醒があった日が ${earlyWakeDays}／${n} 日と、月の3割以上を占めています。`);
+    }
+    if(wakeCountAvg != null && wakeCountAvg >= 1){
+      notes.push(`中途覚醒が平均 ${fmt(wakeCountAvg)} 回／晩あり、睡眠が途切れがちです。`);
+    }
+    if(medMissed > 0){
+      notes.push(`服薬の飲み忘れが ${medMissed} 回（予定 ${medPlanned} 回中）ありました。`);
+    }
+    if(alcoholAvg != null && alcoholAvg >= 1){
+      notes.push(`平均アルコール摂取量が ${fmt(alcoholAvg)} 杯／日で、睡眠の質に影響している可能性があります。`);
+    }
+    const notableMoods = moodStats
+      .map(m => ({...m, best: Math.max(m.morningAvg||0, m.nightAvg||0)}))
+      .filter(m => m.best >= 3.5)
+      .sort((a,b)=> b.best - a.best)
+      .slice(0,3);
+    if(notableMoods.length){
+      const list = notableMoods.map(m=>{
+        const parts = [];
+        if(m.morningAvg!=null) parts.push(`朝 ${fmt(m.morningAvg)}`);
+        if(m.nightAvg!=null) parts.push(`夜 ${fmt(m.nightAvg)}`);
+        return `${m.label}（${parts.join('／')}）`;
+      }).join('、');
+      notes.push(`この月、平均が高めだった気分：${list}`);
+    }
+    const notableBody = bodyStats
+      .filter(m => m.id !== 'physicalFatigue')
+      .map(m => ({...m, best: Math.max(m.morningAvg||0, m.nightAvg||0)}))
+      .filter(m => m.best >= 3.5)
+      .sort((a,b)=> b.best - a.best)
+      .slice(0,3);
+    if(notableBody.length){
+      notes.push(`この月、平均が高めだった身体症状：${notableBody.map(m=>m.label).join('、')}`);
+    }
+    if(fatigueAvg != null && fatigueAvg >= 3.5){
+      notes.push(`身体的疲労が平均 ${fmt(fatigueAvg)} と高めの月でした。`);
+    }
+    const notableBehavior = behaviorStats.filter(m => m.avgVal >= 3).sort((a,b)=>b.avgVal-a.avgVal).slice(0,3);
+    if(notableBehavior.length){
+      notes.push(`この月、比較的よくあてはまった行動：${notableBehavior.map(m=>m.label).join('、')}`);
+    }
+    const notableWork = workStats.filter(m => m.red >= 2).sort((a,b)=>b.red-a.red).slice(0,3);
+    if(notableWork.length){
+      notes.push(`作業面で「高」が多かった項目：${notableWork.map(m=>`${m.label}（${m.red}日）`).join('、')}`);
+    }
+    const notableComm = commStats.filter(m => m.red >= 2).sort((a,b)=>b.red-a.red).slice(0,3);
+    if(notableComm.length){
+      notes.push(`コミュニケーション面で「高」が多かった項目：${notableComm.map(m=>`${m.label}（${m.red}日）`).join('、')}`);
+    }
+    if(diffAvg != null && diffAvg > 0){
+      notes.push(`平均の正味摂取カロリー（運動消費分を差し引いた値）が目安を ${diffAvg} kcal 上回る日が多い月でした。`);
+    }
+    if(n < 20){
+      notes.push(`この月の記録日数は ${n} 日でした。記録日数が少ないと平均値の精度が下がります。`);
+    }
+
+    const tableRows = entries.map((e,i) => `
+      <tr>
+        <td>${e.date.slice(8,10)}日</td>
+        <td>${e.sleepHours ?? '―'}</td>
+        <td>${(e.naps && e.naps.length) ? e.naps.reduce((s,n)=>s+(n.minutes||0),0) : '―'}</td>
+        <td>${e.wakeCount ?? 0}</td>
+        <td>${e.earlyWake ? '○' : ''}</td>
+        <td>${e.poorOnset ? '○' : ''}</td>
+        <td>${e.hardToReturnSleep ? '○' : ''}</td>
+        <td>${['morning','noon','evening','beforeBed'].reduce((s,slot)=> s + ((e.medications && e.medications[slot]) ? e.medications[slot].filter(m=>!m.taken).length : 0), 0) || ''}</td>
+        <td>${e.alcohol ?? 0}</td>
+        <td>${e.exMin ?? '―'}</td>
+        <td>${dayCalories[i] ?? '―'}</td>
+        <td>${e.exCal ?? '―'}</td>
+        <td>${dayNetCalories[i] ?? '―'}</td>
+      </tr>`).join('');
+
+    const moodTableHtml = renderCategoryTable(moodStats, 'この月は気分の記録がありませんでした。');
+    const bodyTableHtml = renderCategoryTable(bodyStats, 'この月は身体の記録がありませんでした。');
+    const behaviorTableHtml = renderSingleTable(behaviorStats, 'この月は行動の記録がありませんでした。');
+    const workTableHtml = renderTriTable(workStats, 'この月は作業の記録がありませんでした。');
+    const commTableHtml = renderTriTable(commStats, 'この月はコミュニケーションの記録がありませんでした。');
+
+    const notesHtml = notes.length
+      ? `<div class="notes-block"><h3>注意すべき点</h3><ul>${notes.map(x=>`<li>${x}</li>`).join('')}</ul></div>`
+      : `<div class="notes-block ok"><h3>注意すべき点</h3><ul><li>特に大きな偏りは見られませんでした。</li></ul></div>`;
+
+    $('summaryArea').innerHTML = `
+      <div class="rec-count">${month} ／ 記録日数 ${n} 日</div>
+      <div class="stat-grid">
+        <div class="stat"><div class="label">平均睡眠時間</div><div class="value">${fmt(sleepHoursAvg)}<small>時間</small></div></div>
+        <div class="stat"><div class="label">中途覚醒の回数（月合計／平均）</div><div class="value">${wakeCountTotal}<small>回（平均 ${fmt(wakeCountAvg)} 回/晩）</small></div></div>
+        <div class="stat"><div class="label">早朝覚醒の回数</div><div class="value">${earlyWakeDays}<small>日</small></div></div>
+        <div class="stat"><div class="label">寝つきが悪かった日</div><div class="value">${poorOnsetDays}<small>日／${n}日中</small></div></div>
+        <div class="stat"><div class="label">途中で眠れなかった日</div><div class="value">${hardToReturnDays}<small>日／${n}日中</small></div></div>
+        <div class="stat"><div class="label">薬の飲み忘れ</div><div class="value">${medMissed}<small>回（予定 ${medPlanned} 回）</small></div></div>
+        <div class="stat"><div class="label">頓服の使用回数</div><div class="value">${prnCount}<small>回／月</small></div></div>
+        <div class="stat"><div class="label">平均アルコール摂取量</div><div class="value">${fmt(alcoholAvg)}<small>杯/日</small></div></div>
+        <div class="stat"><div class="label">平均運動時間</div><div class="value">${fmt(exMinAvg,0)}<small>分/日</small></div></div>
+        <div class="stat"><div class="label">平均歩数</div><div class="value">${fmt(exStepsAvg,0)}<small>歩/日</small></div></div>
+        <div class="stat"><div class="label">平均昼寝時間</div><div class="value">${fmt(napMinAvg,0)}<small>分/日（昼寝した日 ${napDays} 日）</small></div></div>
+        <div class="stat"><div class="label">身体的疲労の平均</div><div class="value">${fmt(fatigueAvg)}<small>（5段階）</small></div></div>
+        <div class="stat"><div class="label">平均摂取カロリー（AI推定・目安）</div><div class="value">${fmt(calAvg,0)}<small>kcal/日（記録 ${daysWithCal} 日分）</small></div></div>
+        <div class="stat"><div class="label">平均運動消費カロリー</div><div class="value">${fmt(exCalAvg,0)}<small>kcal/日</small></div></div>
+        <div class="stat"><div class="label">平均正味摂取カロリー</div><div class="value">${fmt(netCalAvg,0)}<small>kcal/日（摂取－消費）</small></div></div>
+        <div class="stat"><div class="label">目安摂取カロリーとの平均差</div><div class="value">${diffAvg!=null ? (diffAvg>0?'+':'')+diffAvg : '―'}<small>kcal/日（正味ベース）</small></div></div>
+      </div>
+      ${notesHtml}
+      <h3 style="font-size:14.5px; margin:0 0 8px;">気分の傾向（朝・夜の平均）</h3>
+      ${moodTableHtml}
+      <h3 style="font-size:14.5px; margin:0 0 8px;">身体の傾向（朝・夜の平均）</h3>
+      ${bodyTableHtml}
+      <h3 style="font-size:14.5px; margin:0 0 8px;">行動の傾向（1日1回・平均）</h3>
+      ${behaviorTableHtml}
+      <h3 style="font-size:14.5px; margin:0 0 8px;">作業の傾向（低・中・高の回数）</h3>
+      ${workTableHtml}
+      <h3 style="font-size:14.5px; margin:0 0 8px;">コミュニケーションの傾向（低・中・高の回数）</h3>
+      ${commTableHtml}
+      <div class="table-wrap">
+        <table class="day-table">
+          <thead><tr>
+            <th>日</th><th>睡眠h</th><th>昼寝分</th><th>中途覚醒</th><th>早朝覚醒</th><th>寝つき悪</th><th>再入眠困難</th><th>飲み忘れ</th><th>酒(杯)</th><th>運動分</th><th>摂取kcal</th><th>消費kcal</th><th>正味kcal</th>
+          </tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // ===================== グラフ =====================
+  async function loadAllEntries(){
+    let keysRes;
+    try{
+      keysRes = await storage.list('entry:', false);
+    }catch(e){
+      return [];
+    }
+    const allKeys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+    const entries = [];
+    for(const k of allKeys){
+      try{
+        const r = await storage.get(k, false);
+        if(r && r.value) entries.push(JSON.parse(r.value));
+      }catch(e){ /* skip */ }
+    }
+    entries.sort((a,b)=> a.date.localeCompare(b.date));
+    return entries;
+  }
+
+  function metricValue(entry, timeOfDay, metric){
+    if(metric === 'physicalFatigue'){
+      const src = timeOfDay === 'morning' ? entry.bodyMorning : entry.bodyNight;
+      return (src && src.physicalFatigue != null) ? src.physicalFatigue : null;
+    }
+    const src = timeOfDay === 'morning' ? entry.moodMorning : entry.moodNight;
+    if(!src) return null;
+    const vals = Object.values(src).filter(v => v != null);
+    return vals.length ? vals.reduce((a,b)=>a+b,0) / vals.length : null;
+  }
+
+  // 相関モード用：身体的疲労 or 気分の1項目の値を取り出す
+  function categoryValue(entry, timeOfDay, catId){
+    if(catId === 'physicalFatigue'){
+      const src = timeOfDay === 'morning' ? entry.bodyMorning : entry.bodyNight;
+      return (src && src.physicalFatigue != null) ? src.physicalFatigue : null;
+    }
+    const src = timeOfDay === 'morning' ? entry.moodMorning : entry.moodNight;
+    return (src && src[catId] != null) ? src[catId] : null;
+  }
+
+  function isoDate(y,m,d){ return `${y}-${pad(m)}-${pad(d)}`; }
+  function daysInMonth(y,m){ return new Date(y, m, 0).getDate(); }
+
+  // 期間に応じた日付キー・ラベルの並びを作る（共通化）
+  function buildDateList(range){
+    if(range === 'daily30'){
+      const today = new Date();
+      const out = [];
+      for(let i = 29; i >= 0; i--){
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        out.push({ key: isoDate(d.getFullYear(), d.getMonth()+1, d.getDate()), label: `${d.getMonth()+1}/${d.getDate()}` });
+      }
+      return out;
+    }
+    if(range === 'month'){
+      const ym = $('graphMonthPicker').value;
+      if(!ym) return null;
+      const [y,m] = ym.split('-').map(Number);
+      const total = daysInMonth(y,m);
+      const out = [];
+      for(let d = 1; d <= total; d++){
+        out.push({ key: isoDate(y,m,d), label: `${d}日` });
+      }
+      return out;
+    }
+    return null; // 'year' はバケット別処理
+  }
+
+  function paletteColor(i, total){
+    const hue = Math.round((360 * i) / Math.max(total, 1));
+    return `hsl(${hue}, 58%, 42%)`;
+  }
+
+  let moodBodyChart = null;
+
+  function drawMoodBodyChart(labels, morningData, nightData, metricLabel){
+    const ctx = $('moodBodyChart').getContext('2d');
+    if(moodBodyChart) moodBodyChart.destroy();
+    moodBodyChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: '朝', data: morningData, borderColor: '#93783F', backgroundColor: '#93783F', spanGaps: false, tension: 0.25, pointRadius: 3 },
+          { label: '夜', data: nightData, borderColor: '#232946', backgroundColor: '#232946', spanGaps: false, tension: 0.25, pointRadius: 3 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { min: 1, max: 5, ticks: { stepSize: 1 }, title: { display: true, text: metricLabel } } },
+        plugins: { legend: { position: 'top' } }
+      }
+    });
+  }
+
+  function drawCorrelationChart(labels, seriesList){
+    const ctx = $('moodBodyChart').getContext('2d');
+    if(moodBodyChart) moodBodyChart.destroy();
+    moodBodyChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: seriesList.map(s => ({
+          label: s.label,
+          data: s.data,
+          borderColor: s.color,
+          backgroundColor: s.color,
+          spanGaps: false,
+          tension: 0.25,
+          pointRadius: 2,
+          borderWidth: s.emphasis ? 3 : 1.5
+        }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { min: 1, max: 5, ticks: { stepSize: 1 }, title: { display: true, text: '強さ（1〜5）' } } },
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10.5 } } } }
+      }
+    });
+  }
+
+  $('graphMetric').addEventListener('change', ()=>{
+    $('graphTimeOfDayField').style.display = $('graphMetric').value === 'correlation' ? 'block' : 'none';
+    const note = $('graphLegendNote');
+    if($('graphMetric').value === 'correlation'){
+      note.textContent = '身体的疲労と、記録のある気分の項目をすべて重ねて表示します（非表示にした項目は除きます）。線が多いときは凡例をタップして表示・非表示を切り替えられます。';
+    } else {
+      note.textContent = '朝（明るい色）と夜（濃い色）の2本の線で、1〜5の強さを比較できます。記録がない日は線がとぎれます。「気分」は、その朝／夜に記録した項目の値をすべて平均したものです。';
+    }
+  });
+  $('graphRange').addEventListener('change', ()=>{
+    const range = $('graphRange').value;
+    $('graphMonthField').style.display = range === 'month' ? 'block' : 'none';
+    $('graphYearField').style.display = range === 'year' ? 'block' : 'none';
+  });
+  $('graphMonthPicker').value = todayISO().slice(0,7);
+  $('graphYearPicker').value = new Date().getFullYear();
+
+  $('runGraph').addEventListener('click', async ()=>{
+    const btn = $('runGraph');
+    btn.disabled = true;
+    const originalLabel = btn.textContent;
+    btn.textContent = '読み込み中…';
+    try{
+      const metric = $('graphMetric').value;
+      const range = $('graphRange').value;
+      const entries = await loadAllEntries();
+      const byDate = {};
+      entries.forEach(e => byDate[e.date] = e);
+
+      if(metric === 'correlation'){
+        const timeOfDay = $('graphTimeOfDay').value;
+        const candidateCats = [{ id:'physicalFatigue', label:'身体的疲労', emphasis:true }]
+          .concat(getAllCategories('mood').filter(c => !itemHidden.mood.has(c.id)).map(c=>({ id:c.id, label:c.label, emphasis:false })));
+
+        let labels = [];
+        if(range === 'year'){
+          const year = Number($('graphYearPicker').value) || new Date().getFullYear();
+          const buckets = [];
+          for(let m = 1; m <= 12; m++){
+            const total = daysInMonth(year, m);
+            const keys = [];
+            for(let d = 1; d <= total; d++) keys.push(isoDate(year,m,d));
+            buckets.push(keys);
+            labels.push(`${m}月`);
+          }
+          const seriesList = candidateCats.map((cat,i)=>{
+            const data = buckets.map(keys=>{
+              const vals = keys.map(k => byDate[k] ? categoryValue(byDate[k], timeOfDay, cat.id) : null).filter(v=>v!=null);
+              return vals.length ? Math.round((vals.reduce((a,b)=>a+b,0)/vals.length)*10)/10 : null;
+            });
+            return { label: cat.label, data, color: cat.emphasis ? '#A6482F' : paletteColor(i-1, candidateCats.length-1), emphasis: cat.emphasis };
+          }).filter(s => s.data.some(v=>v!=null));
+          drawCorrelationChart(labels, seriesList);
+        } else {
+          const dateList = buildDateList(range);
+          if(!dateList){ btn.textContent = originalLabel; btn.disabled = false; return; }
+          labels = dateList.map(d=>d.label);
+          const seriesList = candidateCats.map((cat,i)=>{
+            const data = dateList.map(d => byDate[d.key] ? categoryValue(byDate[d.key], timeOfDay, cat.id) : null);
+            return { label: cat.label, data, color: cat.emphasis ? '#A6482F' : paletteColor(i-1, candidateCats.length-1), emphasis: cat.emphasis };
+          }).filter(s => s.data.some(v=>v!=null));
+          drawCorrelationChart(labels, seriesList);
+        }
+        return;
+      }
+
+      const metricLabel = metric === 'physicalFatigue' ? '身体的疲労（1〜5）' : '気分の平均（1〜5）';
+      let labels = [], morningData = [], nightData = [];
+
+      if(range === 'year'){
+        const year = Number($('graphYearPicker').value) || new Date().getFullYear();
+        for(let m = 1; m <= 12; m++){
+          const total = daysInMonth(year, m);
+          const morningVals = [], nightVals = [];
+          for(let d = 1; d <= total; d++){
+            const e = byDate[isoDate(year,m,d)];
+            if(e){
+              const mv = metricValue(e, 'morning', metric);
+              const nv = metricValue(e, 'night', metric);
+              if(mv != null) morningVals.push(mv);
+              if(nv != null) nightVals.push(nv);
+            }
+          }
+          labels.push(`${m}月`);
+          morningData.push(morningVals.length ? Math.round((morningVals.reduce((a,b)=>a+b,0)/morningVals.length)*10)/10 : null);
+          nightData.push(nightVals.length ? Math.round((nightVals.reduce((a,b)=>a+b,0)/nightVals.length)*10)/10 : null);
+        }
+      } else {
+        const dateList = buildDateList(range);
+        if(!dateList){ btn.textContent = originalLabel; btn.disabled = false; return; }
+        dateList.forEach(d=>{
+          const e = byDate[d.key];
+          labels.push(d.label);
+          morningData.push(e ? metricValue(e, 'morning', metric) : null);
+          nightData.push(e ? metricValue(e, 'night', metric) : null);
+        });
+      }
+
+      drawMoodBodyChart(labels, morningData, nightData, metricLabel);
+    } finally {
+      btn.textContent = originalLabel;
+      btn.disabled = false;
+    }
+  });
+
+  // ===================== データのバックアップ（書き出し・読み込み） =====================
+  $('exportBtn').addEventListener('click', async ()=>{
+    const status = $('dataIoStatus');
+    status.textContent = '書き出し中…';
+    try{
+      const listRes = await storage.list('');
+      const allKeys = (listRes && listRes.keys) ? listRes.keys : [];
+      const data = {};
+      for(const k of allKeys){
+        try{
+          const r = await storage.get(k);
+          if(r && r.value != null) data[k] = r.value;
+        }catch(e){ /* skip */ }
+      }
+      const payload = {
+        app: 'sleep-health-journal',
+        exportedAt: new Date().toISOString(),
+        data: data
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = todayISO();
+      a.href = url;
+      a.download = `sleep-health-journal-backup-${stamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      status.textContent = `${allKeys.length} 件のデータを書き出しました。`;
+    }catch(e){
+      status.textContent = '書き出しに失敗しました。もう一度お試しください。';
+    }
+  });
+
+  $('importFile').addEventListener('change', async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    const status = $('dataIoStatus');
+    if(!file) return;
+    status.textContent = '読み込み中…';
+    try{
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const data = parsed && parsed.data ? parsed.data : null;
+      if(!data){
+        status.textContent = 'このファイルは読み込めませんでした（形式が違うようです）。';
+        e.target.value = '';
+        return;
+      }
+      let count = 0;
+      for(const key of Object.keys(data)){
+        await storage.set(key, data[key]);
+        count++;
+      }
+      status.textContent = `${count} 件のデータを読み込みました。ページを再読み込みします…`;
+      setTimeout(()=> location.reload(), 1200);
+    }catch(e){
+      status.textContent = '読み込みに失敗しました。ファイルの内容をご確認ください。';
+    }
+    e.target.value = '';
+  });
+
+  // ===================== 睡眠グラフ =====================
+  let sleepBarChart = null;
+
+  function drawSleepBarChart(labels, values, colors){
+    const barPixelHeight = 20;
+    const wrap = $('sleepChartWrap');
+    const desiredHeight = Math.max(300, labels.length * barPixelHeight + 60);
+    wrap.style.height = Math.min(desiredHeight, 520) + 'px';
+    const canvas = $('sleepBarChart');
+    canvas.parentElement.style.height = desiredHeight + 'px';
+    canvas.style.height = desiredHeight + 'px';
+
+    const ctx = canvas.getContext('2d');
+    if(sleepBarChart) sleepBarChart.destroy();
+    sleepBarChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: '睡眠時間',
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 3,
+          barThickness: 12
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { beginAtZero: true, title: { display: true, text: '睡眠時間（時間）' } },
+          y: { ticks: { autoSkip: false, font: { size: 10.5 } } }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  $('runSleepGraph').addEventListener('click', async ()=>{
+    const btn = $('runSleepGraph');
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '読み込み中…';
+    try{
+      const days = Number($('sleepGraphRange').value);
+      const entries = await loadAllEntries();
+      const byDate = {};
+      entries.forEach(e => byDate[e.date] = e);
+
+      const today = new Date();
+      const labels = [], values = [], colors = [];
+      const goodSleep = (currentProfile && currentProfile.goodSleepHours) ? currentProfile.goodSleepHours : null;
+      const threshold = goodSleep ? goodSleep * 0.8 : null;
+
+      for(let i = days - 1; i >= 0; i--){
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = isoDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+        const e = byDate[key];
+        const hours = e && e.sleepHours != null ? e.sleepHours : null;
+        labels.push(`${d.getMonth()+1}/${d.getDate()}`);
+        values.push(hours);
+        if(hours == null){
+          colors.push('#DAE0D8');
+        } else if(threshold != null && hours < threshold){
+          colors.push('#A6482F');
+        } else {
+          colors.push('#3B5169');
+        }
+      }
+
+      drawSleepBarChart(labels, values, colors);
+
+      const note = $('sleepGraphNote');
+      if(!goodSleep){
+        note.textContent = '「私」タブで「調子が良い時の平均睡眠時間」を設定すると、その8割を下回った日の棒が赤色で表示されます。今は基準値が未設定のため、色分けはしていません。';
+      } else {
+        note.textContent = `横向きの棒グラフで、1日ごとの睡眠時間を表示しています。基準値（${goodSleep}時間）の8割にあたる ${fmt(threshold)} 時間を下回った日は赤色で表示しています。期間が長いときは、グラフの中で上下にスクロールできます。`;
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  });
+
+  loadProfile();
+  loadItemVisibility();
+  loadCustomCategories();
+  loadMedSlotPrefs().then(()=> loadEntryForDate($('entryDate').value));
+
+})();
+</script>
+</body>
+</html>
